@@ -1,0 +1,101 @@
+:root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  /* Light theme colors */
+  --color-text: #213547;
+  --color-text-secondary: #666;
+  --color-bg: #f8f9fa;
+  --color-bg-card: white;
+  --color-bg-user-message: #e3f2fd;
+  --color-bg-assistant-message: #f5f5f5;
+  --color-bg-input-disabled: #f5f5f5;
+  --color-border: #e0e0e0;
+  --color-border-input: #ddd;
+  --color-primary: #0066cc;
+  --color-primary-hover: #0052a3;
+  --color-danger: #dc3545;
+  --color-danger-hover: #c82333;
+  --color-error-bg: #ffebee;
+  --color-error-border: #ef9a9a;
+  --color-error-text: #c62828;
+  --color-example-bg: #e3f2fd;
+  --color-code-bg: rgba(0, 0, 0, 0.1);
+  --color-shadow: rgba(0, 0, 0, 0.1);
+
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-text: #e4e4e7;
+    --color-text-secondary: #a1a1aa;
+    --color-bg: #18181b;
+    --color-bg-card: #27272a;
+    --color-bg-user-message: #1e3a5f;
+    --color-bg-assistant-message: #3f3f46;
+    --color-bg-input-disabled: #3f3f46;
+    --color-border: #3f3f46;
+    --color-border-input: #52525b;
+    --color-primary: #3b82f6;
+    --color-primary-hover: #2563eb;
+    --color-danger: #ef4444;
+    --color-danger-hover: #dc2626;
+    --color-error-bg: #450a0a;
+    --color-error-border: #7f1d1d;
+    --color-error-text: #fca5a5;
+    --color-example-bg: #1e3a5f;
+    --color-code-bg: rgba(255, 255, 255, 0.1);
+    --color-shadow: rgba(0, 0, 0, 0.3);
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 1rem;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+
+button:hover {
+  border-color: var(--color-primary);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input, textarea {
+  font-family: inherit;
+  font-size: 1em;
+}
+

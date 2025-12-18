@@ -1,0 +1,152 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.app-header p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  flex: 1;
+}
+
+.clear-button {
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-input);
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+.clear-button:hover {
+  background-color: var(--color-bg-assistant-message);
+}
+
+.chat-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.welcome-message {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: var(--color-bg-card);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+.welcome-message h2 {
+  margin-bottom: 1rem;
+}
+
+.welcome-message ul {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.welcome-message li {
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.welcome-message .example {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: var(--color-example-bg);
+  border-radius: 8px;
+  font-style: italic;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: 8px;
+  margin-top: 1rem;
+  color: var(--color-error-text);
+}
+
+.error-banner button {
+  background: transparent;
+  border: none;
+  color: var(--color-error-text);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.chat-footer {
+  padding: 1rem;
+  background-color: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.attribution {
+  text-align: center;
+  margin: 1.25rem 0 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.attribution a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.attribution a:hover {
+  text-decoration: underline;
+}
+
+.heart {
+  display: inline-block;
+  animation: heartbeat 1.2s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.3);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.3);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+

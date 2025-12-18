@@ -77,6 +77,9 @@ ehthumbs.db
 *.pem
 *.key
 secrets/
+appsettings.json
+appsettings.*.json
+!appsettings.example.json
 
 # Logs
 *.log
@@ -96,3 +99,5 @@ nhtsa_automotive/raw_data/
 
 # Reference
 reference/
+roadmap.md
+RFT_SETUP.md

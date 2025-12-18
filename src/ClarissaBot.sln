@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ClarissaBot", "ClarissaBot", "{EF30E711-C08D-4788-AF58-7697819509F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClarissaBot.Core", "ClarissaBot\ClarissaBot.Core\ClarissaBot.Core.csproj", "{A29087E8-46A4-40FF-8ED1-B19BB77B32C0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClarissaBot.Console", "ClarissaBot\ClarissaBot.Console\ClarissaBot.Console.csproj", "{C18B7345-C663-49F9-81FB-16192773E1F6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClarissaBot.Tests", "ClarissaBot\ClarissaBot.Tests\ClarissaBot.Tests.csproj", "{A3F7DC2E-31EC-47E6-92B5-34BD94606939}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClarissaBot.Api", "ClarissaBot\ClarissaBot.Api\ClarissaBot.Api.csproj", "{4EA322E7-F0BC-4F1B-808B-F2FD746F7534}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A29087E8-46A4-40FF-8ED1-B19BB77B32C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A29087E8-46A4-40FF-8ED1-B19BB77B32C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A29087E8-46A4-40FF-8ED1-B19BB77B32C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A29087E8-46A4-40FF-8ED1-B19BB77B32C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C18B7345-C663-49F9-81FB-16192773E1F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C18B7345-C663-49F9-81FB-16192773E1F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C18B7345-C663-49F9-81FB-16192773E1F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C18B7345-C663-49F9-81FB-16192773E1F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3F7DC2E-31EC-47E6-92B5-34BD94606939}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3F7DC2E-31EC-47E6-92B5-34BD94606939}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3F7DC2E-31EC-47E6-92B5-34BD94606939}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3F7DC2E-31EC-47E6-92B5-34BD94606939}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EA322E7-F0BC-4F1B-808B-F2FD746F7534}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EA322E7-F0BC-4F1B-808B-F2FD746F7534}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EA322E7-F0BC-4F1B-808B-F2FD746F7534}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EA322E7-F0BC-4F1B-808B-F2FD746F7534}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A29087E8-46A4-40FF-8ED1-B19BB77B32C0} = {EF30E711-C08D-4788-AF58-7697819509F2}
+		{C18B7345-C663-49F9-81FB-16192773E1F6} = {EF30E711-C08D-4788-AF58-7697819509F2}
+		{A3F7DC2E-31EC-47E6-92B5-34BD94606939} = {EF30E711-C08D-4788-AF58-7697819509F2}
+		{4EA322E7-F0BC-4F1B-808B-F2FD746F7534} = {EF30E711-C08D-4788-AF58-7697819509F2}
+	EndGlobalSection
+EndGlobal

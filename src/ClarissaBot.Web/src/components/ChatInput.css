@@ -1,0 +1,56 @@
+.chat-input {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: var(--color-bg-card);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+.chat-input textarea {
+  flex: 1;
+  resize: none;
+  border: 1px solid var(--color-border-input);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  background-color: var(--color-bg-card);
+  color: var(--color-text);
+}
+
+.chat-input textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.chat-input textarea:disabled {
+  background-color: var(--color-bg-input-disabled);
+}
+
+.chat-input-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.send-button {
+  background-color: var(--color-primary);
+  color: white;
+  padding: 0.75rem 1.5rem;
+}
+
+.send-button:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.cancel-button {
+  background-color: var(--color-danger);
+  color: white;
+  padding: 0.75rem 1.5rem;
+}
+
+.cancel-button:hover {
+  background-color: var(--color-danger-hover);
+}
+
