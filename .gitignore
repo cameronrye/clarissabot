@@ -91,3 +91,6 @@ temp/
 *.tmp
 *.temp
 *.pdf
+
+# Large data files (can be re-downloaded)
+nhtsa_automotive/raw_data/

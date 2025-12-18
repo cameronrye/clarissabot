@@ -79,10 +79,52 @@ Grader: Model grader checks if summary matches complaint patterns
 
 ## 📁 Files
 
+### Data & Exploration
 - `download_nhtsa_data.sh` - Downloads bulk data files
 - `explore_nhtsa_data.py` - Python script to explore downloaded data
 - `test_api.sh` - Quick API test script
 - `raw_data/` - Downloaded data files (after running download script)
+
+### RFT Training
+- `rft_training.jsonl` - Training examples (15 samples)
+- `rft_validation.jsonl` - Validation examples (5 samples)
+- `schema.json` - Structured output schema for responses
+- `graders/` - Grader configurations:
+  - `python_grader.json` - Python grader config (uses live API)
+  - `nhtsa_grader.py` - Python grader implementation
+  - `model_grader.json` - LLM-based grader config
+  - `multi_grader.json` - Combined multi-grader config
+
+## 🚀 RFT Training Setup
+
+```python
+from openai import AzureOpenAI
+import json
+
+client = AzureOpenAI(...)
+
+# Load grader
+with open("graders/python_grader.json") as f:
+    grader = json.load(f)
+
+# Load schema
+with open("schema.json") as f:
+    schema = json.load(f)
+
+# Create RFT job
+job = client.fine_tuning.jobs.create(
+    model="o4-mini-2025-04-16",
+    training_file="file-xxx",  # Upload rft_training.jsonl
+    validation_file="file-yyy",  # Upload rft_validation.jsonl
+    method={
+        "type": "reinforcement",
+        "reinforcement": {
+            "grader": grader,
+            "response_format": schema,
+        },
+    },
+)
+```
 
 ## 🔗 Resources
 

@@ -1,0 +1,22 @@
+{
+  "name": "nhtsa_model_grader",
+  "type": "score_model",
+  "model": "gpt-5.2",
+  "pass_threshold": 0.7,
+  "range": [0.0, 1.0],
+  "input": [
+    {
+      "role": "system",
+      "content": "You are an automotive safety expert grader. Score how accurately the model's response answers questions about vehicle recalls, complaints, and safety ratings. Consider:\n1. Factual accuracy (does it match known NHTSA data?)\n2. Completeness (does it include relevant details like campaign numbers?)\n3. Clarity (is the answer easy to understand?)\n\nReturn ONLY a decimal score between 0.0 and 1.0, nothing else."
+    },
+    {
+      "role": "user",
+      "content": "Query Type: {{item.query_type}}\nVehicle: {{item.year}} {{item.make}} {{item.model}}\n\nUser Question: {{item.messages[-1].content}}\n\nModel Response: {{sample.output_text}}\n\nScore (0.0-1.0):"
+    }
+  ],
+  "sampling_params": {
+    "seed": 42,
+    "temperature": 0
+  }
+}
+

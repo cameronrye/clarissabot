@@ -1,0 +1,7 @@
+{
+  "name": "nhtsa_api_grader",
+  "type": "python",
+  "source": "nhtsa_grader.py",
+  "pass_threshold": 0.7
+}
+
