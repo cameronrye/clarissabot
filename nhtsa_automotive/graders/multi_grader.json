@@ -12,7 +12,7 @@
     "response_quality": {
       "name": "response_quality",
       "type": "score_model",
-      "model": "gpt-5.2",
+      "model": "gpt-4o-2024-08-06",
       "input": [
         {
           "role": "system",

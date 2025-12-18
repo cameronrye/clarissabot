@@ -101,11 +101,17 @@ def grade(item: dict, sample: dict) -> float:
         count = api_data.get("count", 0)
 
         has_complaints = count > 0
-        response_says_yes = any(w in response for w in [
-            "complaint", "issue", "problem", "reported", "filed"
-        ])
+
+        # Check for negative phrases FIRST (order matters for "no complaints filed")
         response_says_no = any(phrase in response for phrase in [
-            "no complaints", "no issues", "no problems", "none reported"
+            "no complaints", "no issues", "no problems", "none reported",
+            "no reported", "haven't been filed", "have not been filed",
+            "0 complaints", "zero complaints", "none filed", "no filed"
+        ])
+
+        # Only count as "yes" if not negated
+        response_says_yes = not response_says_no and any(w in response for w in [
+            "complaint", "issue", "problem", "reported", "filed", "owners report"
         ])
 
         # Check for component filter match if specified
@@ -118,8 +124,10 @@ def grade(item: dict, sample: dict) -> float:
         elif not has_complaints and response_says_no:
             return 1.0
         elif has_complaints and response_says_no:
-            return 0.0
-        return 0.5  # Neutral
+            return 0.0  # Wrong - denied complaints when they exist
+        elif not has_complaints and response_says_yes:
+            return 0.0  # Wrong - claimed complaints when none exist
+        return 0.5  # Neutral/unclear
 
     elif query_type == "complaint_count":
         api_data = get_complaints(make, model, year)

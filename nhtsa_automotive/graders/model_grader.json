@@ -1,7 +1,7 @@
 {
   "name": "nhtsa_model_grader",
   "type": "score_model",
-  "model": "gpt-5.2",
+  "model": "gpt-4o-2024-08-06",
   "pass_threshold": 0.7,
   "range": [0.0, 1.0],
   "input": [
