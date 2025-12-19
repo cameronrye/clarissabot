@@ -1,0 +1,39 @@
+{
+  "name": "nhtsa_multi_grader",
+  "type": "multi",
+  "pass_threshold": 0.7,
+  "graders": {
+    "factual_accuracy": {
+      "name": "factual_accuracy",
+      "type": "python",
+      "source": "nhtsa_grader.py",
+      "weight": 0.6
+    },
+    "response_quality": {
+      "name": "response_quality",
+      "type": "score_model",
+      "model": "gpt-4o-2024-08-06",
+      "input": [
+        {
+          "role": "system",
+          "content": "Score the quality of this automotive safety response. Consider clarity, helpfulness, and appropriate level of detail. Return only a score from 0.0 to 1.0."
+        },
+        {
+          "role": "user",
+          "content": "Question: {{item.messages[-1].content}}\nResponse: {{sample.output_text}}\nScore:"
+        }
+      ],
+      "weight": 0.2
+    },
+    "safety_awareness": {
+      "name": "safety_awareness",
+      "type": "string_check",
+      "input": "{{sample.output_text}}",
+      "operation": "contains",
+      "reference": "{{item.query_type}}",
+      "weight": 0.2
+    }
+  },
+  "calculate_output": "0.6 * factual_accuracy + 0.2 * response_quality + 0.2 * safety_awareness"
+}
+
