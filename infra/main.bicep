@@ -139,8 +139,12 @@ output containerRegistryLoginServer string = containerRegistry.outputs.loginServ
 output containerRegistryName string = containerRegistry.outputs.name
 output containerAppsEnvironmentName string = containerAppsEnv.outputs.name
 output containerAppsEnvironmentDomain string = containerAppsEnv.outputs.defaultDomain
+#disable-next-line outputs-should-not-contain-secrets
 output apiUrl string = !empty(apiImage) ? apiApp.outputs.url : ''
+#disable-next-line outputs-should-not-contain-secrets
 output webUrl string = !empty(webImage) ? webApp.outputs.url : ''
+#disable-next-line outputs-should-not-contain-secrets
 output appInsightsConnectionString string = monitoring.outputs.appInsightsConnectionString
+#disable-next-line outputs-should-not-contain-secrets
 output apiPrincipalId string = !empty(apiImage) ? apiApp.outputs.principalId : ''
 

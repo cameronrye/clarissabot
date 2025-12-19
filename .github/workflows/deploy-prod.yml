@@ -13,7 +13,7 @@ on:
         required: true
 
 env:
-  DOTNET_VERSION: '9.0.x'
+  DOTNET_VERSION: '10.0.x'
   AZURE_RESOURCE_GROUP: clarissabot-rg
   AZURE_LOCATION: eastus
   ENVIRONMENT: prod

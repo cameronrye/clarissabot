@@ -286,6 +286,19 @@
   border-radius: 8px;
   font-style: normal;
   font-size: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.welcome-message .example-label {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.welcome-message .example-text {
+  font-style: italic;
+  word-break: break-word;
 }
 
 .welcome-message .example::before {
@@ -307,6 +320,8 @@
     margin-top: 1.5rem;
     padding: 1rem;
     font-size: 1rem;
+    flex-direction: row;
+    gap: 0.5rem;
   }
 }
 

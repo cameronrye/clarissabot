@@ -15,8 +15,8 @@ on:
         default: false
 
 env:
-  DOTNET_VERSION: '9.0.x'
-  NODE_VERSION: '20'
+  DOTNET_VERSION: '10.0.x'
+  NODE_VERSION: '22'
   AZURE_RESOURCE_GROUP: clarissabot-rg
   AZURE_LOCATION: eastus
   ENVIRONMENT: dev
