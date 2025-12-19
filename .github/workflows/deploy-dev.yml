@@ -86,7 +86,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push API
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: src/ClarissaBot
           file: src/ClarissaBot/ClarissaBot.Api/Dockerfile
@@ -105,7 +105,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Web
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: src/ClarissaBot.Web
           file: src/ClarissaBot.Web/Dockerfile
