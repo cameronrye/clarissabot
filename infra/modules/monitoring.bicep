@@ -41,12 +41,15 @@ output logAnalyticsWorkspaceId string = logAnalytics.id
 @description('Log Analytics workspace customer ID')
 output logAnalyticsCustomerId string = logAnalytics.properties.customerId
 
-@description('Log Analytics primary shared key')
+@description('Log Analytics primary shared key - required for Container Apps Environment')
+#disable-next-line outputs-should-not-contain-secrets
 output logAnalyticsPrimaryKey string = logAnalytics.listKeys().primarySharedKey
 
 @description('Application Insights connection string')
+#disable-next-line outputs-should-not-contain-secrets
 output appInsightsConnectionString string = appInsights.properties.ConnectionString
 
 @description('Application Insights instrumentation key')
+#disable-next-line outputs-should-not-contain-secrets
 output appInsightsInstrumentationKey string = appInsights.properties.InstrumentationKey
 
