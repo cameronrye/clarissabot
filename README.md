@@ -2,6 +2,14 @@
   <img src="src/ClarissaBot.Web/public/favicon.svg" alt="Clarissa Logo" width="120" height="120">
 </p>
 
+<p align="center">
+  <a href="https://github.com/cameronrye/clarissabot/actions/workflows/ci.yml"><img src="https://github.com/cameronrye/clarissabot/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/cameronrye/clarissabot/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/.NET-10.0-purple.svg" alt=".NET 10">
+  <img src="https://img.shields.io/badge/React-19-blue.svg" alt="React 19">
+  <img src="https://img.shields.io/badge/TypeScript-5.9-blue.svg" alt="TypeScript">
+</p>
+
 # ClarissaBot
 
 ClarissaBot is an AI-powered vehicle safety assistant that provides information from the National Highway Traffic Safety Administration (NHTSA). It helps users check vehicle recalls, safety ratings, and consumer complaints using natural language queries.
@@ -34,8 +42,8 @@ data/
 
 ## Prerequisites
 
-- .NET 8 or 9 SDK
-- Node.js 18+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (or use the included `global.json`)
+- [Node.js 22+](https://nodejs.org/)
 - Azure subscription with Azure OpenAI access
 - Azure CLI authenticated (`az login`)
 
