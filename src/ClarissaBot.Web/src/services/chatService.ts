@@ -1,6 +1,31 @@
 import type { StreamEvent } from '../types/chat';
 
 /**
+ * Get the API key from environment or config.
+ * In production, this should be injected at build time or runtime.
+ */
+function getApiKey(): string | undefined {
+  // Vite environment variable (set at build time)
+  return import.meta.env.VITE_API_KEY;
+}
+
+/**
+ * Get common headers for API requests.
+ */
+function getApiHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  const apiKey = getApiKey();
+  if (apiKey) {
+    headers['X-API-Key'] = apiKey;
+  }
+
+  return headers;
+}
+
+/**
  * Parse a single SSE line into an event object.
  */
 function parseSseLine(line: string): StreamEvent | null {
@@ -42,9 +67,7 @@ export async function streamChatMessage(
 ): Promise<void> {
   const response = await fetch('/api/chat/stream', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: getApiHeaders(),
     body: JSON.stringify({
       message,
       conversationId,

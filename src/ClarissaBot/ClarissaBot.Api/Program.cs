@@ -1,5 +1,6 @@
 using Azure.AI.OpenAI;
 using Azure.Identity;
+using ClarissaBot.Api.Middleware;
 using ClarissaBot.Api.Models;
 using ClarissaBot.Core.Agent;
 using ClarissaBot.Core.Extensions;
@@ -74,6 +75,9 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStatusCodePages();
 app.UseCors("AllowFrontend");
+
+// API Key authentication (skipped if no API_KEY configured)
+app.UseApiKeyAuthentication();
 
 // Health check endpoint
 app.MapGet("/api/health", () => Results.Ok(new
