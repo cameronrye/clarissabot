@@ -76,9 +76,8 @@ ehthumbs.db
 *.pem
 *.key
 secrets/
-appsettings.json
-appsettings.*.json
-!appsettings.example.json
+# Local config files with real credentials (never commit)
+appsettings.Local.json
 .api-key-*
 
 # Logs

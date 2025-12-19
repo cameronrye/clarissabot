@@ -63,7 +63,7 @@ export function InfoOverlay({ isOpen, onClose }: InfoOverlayProps) {
           <div className="tech-category">
             <h4>Backend</h4>
             <ul>
-              <li>.NET 9 / C#</li>
+              <li>.NET 10 / C#</li>
               <li>ASP.NET Core Minimal APIs</li>
             </ul>
           </div>

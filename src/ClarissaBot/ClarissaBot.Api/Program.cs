@@ -7,6 +7,9 @@ using ClarissaBot.Core.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add optional local configuration (gitignored) for developer-specific settings
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+
 // Add ProblemDetails service for standardized RFC 7807 error responses
 builder.Services.AddProblemDetails();
 
