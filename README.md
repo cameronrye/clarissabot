@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="src/ClarissaBot.Web/public/favicon.svg" alt="Clarissa Logo" width="120" height="120">
+</p>
+
 # ClarissaBot
 
 ClarissaBot is an AI-powered vehicle safety assistant that provides information from the National Highway Traffic Safety Administration (NHTSA). It helps users check vehicle recalls, safety ratings, and consumer complaints using natural language queries.

@@ -4,6 +4,9 @@ import { streamChatMessage } from './services/chatService';
 import { ChatMessage } from './components/ChatMessage';
 import { ChatInput } from './components/ChatInput';
 import { InfoOverlay } from './components/InfoOverlay';
+import { ThemeToggle } from './components/ThemeToggle';
+import { useTheme } from './hooks/useTheme';
+import { ClarissaLogo, Info, Hand, Bell, Star, FileText, AlertTriangle, GradientHeart } from './components/Icons';
 import './App.css';
 
 function App() {
@@ -15,6 +18,7 @@ function App() {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { theme, setTheme } = useTheme();
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -112,7 +116,10 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>🚗 Clarissa</h1>
+        <div className="header-brand">
+          <ClarissaLogo size={28} />
+          <h1>Clarissa</h1>
+        </div>
         <p>NHTSA Vehicle Safety Assistant</p>
         <div className="header-actions">
           {messages.length > 0 && (
@@ -120,8 +127,9 @@ function App() {
               Clear Chat
             </button>
           )}
+          <ThemeToggle theme={theme} setTheme={setTheme} />
           <button onClick={() => setShowInfo(true)} className="info-button" aria-label="About">
-            ⓘ
+            <Info size={18} />
           </button>
         </div>
       </header>
@@ -147,12 +155,12 @@ function App() {
       <main className="chat-container">
         {messages.length === 0 ? (
           <div className="welcome-message">
-            <h2>Welcome! 👋</h2>
+            <h2>Welcome</h2>
             <p>I can help you with vehicle safety information from NHTSA:</p>
             <ul>
-              <li>🔔 <strong>Recalls</strong> - Check for safety recalls on any vehicle</li>
-              <li>⭐ <strong>Safety Ratings</strong> - Get NCAP crash test ratings</li>
-              <li>📝 <strong>Complaints</strong> - View consumer complaints</li>
+              <li><Bell size={18} /> <strong>Recalls</strong> - Check for safety recalls on any vehicle</li>
+              <li><Star size={18} /> <strong>Safety Ratings</strong> - Get NCAP crash test ratings</li>
+              <li><FileText size={18} /> <strong>Complaints</strong> - View consumer complaints</li>
             </ul>
             <p className="example">Try asking: "Are there any recalls on the 2020 Tesla Model 3?"</p>
           </div>
@@ -164,10 +172,11 @@ function App() {
             <div ref={messagesEndRef} />
           </div>
         )}
-        
+
         {error && (
           <div className="error-banner">
-            ⚠️ {error}
+            <AlertTriangle size={18} />
+            <span>{error}</span>
             <button onClick={() => setError(null)}>Dismiss</button>
           </div>
         )}
@@ -181,7 +190,7 @@ function App() {
           onCancel={handleCancel}
         />
         <p className="attribution">
-          Made with <span className="heart">❤️</span> by <a href="https://rye.dev" target="_blank" rel="noopener noreferrer">Cameron Rye</a>
+          Made with <span className="heart"><GradientHeart size={14} /></span> by <a href="https://rye.dev" target="_blank" rel="noopener noreferrer">Cameron Rye</a>
         </p>
       </footer>
     </div>

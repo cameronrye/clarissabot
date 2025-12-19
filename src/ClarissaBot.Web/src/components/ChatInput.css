@@ -1,10 +1,18 @@
+/* Mobile-first chat input */
 .chat-input {
   display: flex;
-  gap: 0.75rem;
-  padding: 1rem;
+  gap: 0.5rem;
+  padding: 0.75rem;
   background-color: var(--color-bg-card);
   border-radius: 12px;
-  box-shadow: 0 2px 8px var(--color-shadow);
+  box-shadow: 0 2px 12px var(--color-shadow);
+}
+
+@media (min-width: 640px) {
+  .chat-input {
+    gap: 0.75rem;
+    padding: 1rem;
+  }
 }
 
 .chat-input textarea {
@@ -13,19 +21,34 @@
   border: 1px solid var(--color-border-input);
   border-radius: 8px;
   padding: 0.75rem;
-  font-size: 1rem;
+  font-size: 16px; /* Prevents iOS zoom */
   line-height: 1.5;
-  background-color: var(--color-bg-card);
+  background-color: var(--color-bg-secondary);
   color: var(--color-text);
+  min-height: 44px; /* iOS touch target minimum */
+  max-height: 120px;
+}
+
+@media (min-width: 640px) {
+  .chat-input textarea {
+    font-size: 1rem;
+    max-height: 200px;
+  }
+}
+
+.chat-input textarea::placeholder {
+  color: var(--color-text-secondary);
 }
 
 .chat-input textarea:focus {
   outline: none;
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.15);
 }
 
 .chat-input textarea:disabled {
   background-color: var(--color-bg-input-disabled);
+  opacity: 0.7;
 }
 
 .chat-input-actions {
@@ -34,23 +57,41 @@
   justify-content: flex-end;
 }
 
+.send-button,
+.cancel-button {
+  min-width: 44px;
+  min-height: 44px; /* iOS touch target minimum */
+  padding: 0.625rem 1rem;
+  font-weight: 500;
+}
+
+@media (min-width: 640px) {
+  .send-button,
+  .cancel-button {
+    padding: 0.75rem 1.5rem;
+  }
+}
+
 .send-button {
-  background-color: var(--color-primary);
+  background: var(--gradient);
   color: white;
-  padding: 0.75rem 1.5rem;
+  border: none;
 }
 
 .send-button:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
+  opacity: 0.9;
+}
+
+.send-button:disabled {
+  background: var(--color-bg-input-disabled);
+  color: var(--color-text-secondary);
 }
 
 .cancel-button {
   background-color: var(--color-danger);
   color: white;
-  padding: 0.75rem 1.5rem;
 }
 
 .cancel-button:hover {
   background-color: var(--color-danger-hover);
 }
-

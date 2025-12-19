@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { ClarissaLogo, X, Wrench, UserCircle, Github, BookOpen, ExternalLink } from './Icons';
 import './InfoOverlay.css';
 
 interface InfoOverlayProps {
@@ -35,18 +36,21 @@ export function InfoOverlay({ isOpen, onClose }: InfoOverlayProps) {
     <div className="info-overlay" ref={overlayRef} onClick={handleBackdropClick}>
       <div className="info-modal" role="dialog" aria-modal="true" aria-labelledby="info-title">
         <button className="info-close" onClick={onClose} aria-label="Close">
-          ✕
+          <X size={20} />
         </button>
 
-        <h2 id="info-title">🚗 About Clarissa</h2>
+        <h2 id="info-title">
+          <ClarissaLogo size={28} />
+          <span>About Clarissa</span>
+        </h2>
         <p className="info-description">
-          Your AI-powered NHTSA vehicle safety assistant. Get instant information about 
+          Your AI-powered NHTSA vehicle safety assistant. Get instant information about
           recalls, safety ratings, and consumer complaints for any vehicle.
         </p>
 
         <hr className="info-divider" />
 
-        <h3>🛠️ Built With</h3>
+        <h3><Wrench size={18} /> Built With</h3>
         <div className="tech-stack">
           <div className="tech-category">
             <h4>Frontend</h4>
@@ -68,7 +72,7 @@ export function InfoOverlay({ isOpen, onClose }: InfoOverlayProps) {
             <ul>
               <li>Azure AI Foundry</li>
               <li>Azure OpenAI Service</li>
-              <li>Azure Identity (DefaultAzureCredential)</li>
+              <li>Azure Identity</li>
             </ul>
           </div>
           <div className="tech-category">
@@ -82,7 +86,7 @@ export function InfoOverlay({ isOpen, onClose }: InfoOverlayProps) {
                   className="tech-link"
                 >
                   NHTSA Open Data APIs
-                  <span className="learn-more">Learn more →</span>
+                  <span className="learn-more"><ExternalLink size={12} /></span>
                 </a>
               </li>
             </ul>
@@ -91,35 +95,34 @@ export function InfoOverlay({ isOpen, onClose }: InfoOverlayProps) {
 
         <hr className="info-divider" />
 
-        <h3>👨‍💻 About the Creator</h3>
+        <h3><UserCircle size={18} /> About the Creator</h3>
         <p className="creator-blurb">
-          Hi! I'm <strong>Cameron Rye</strong>, a software developer passionate about 
-          building useful applications with modern technologies. I'm currently 
-          <strong> open to new opportunities</strong> — if you're hiring or want to 
+          Hi! I'm <strong>Cameron Rye</strong>, a software developer passionate about
+          building useful applications with modern technologies. I'm currently
+          <strong> open to new opportunities</strong> — if you're hiring or want to
           connect, I'd love to hear from you!
         </p>
         <div className="creator-links">
           <a href="https://rye.dev" target="_blank" rel="noopener noreferrer" className="creator-link">
-            📖 Blog (rye.dev)
+            <BookOpen size={16} /> Blog (rye.dev)
           </a>
           <a href="https://github.com/cameronrye" target="_blank" rel="noopener noreferrer" className="creator-link">
-            🐙 GitHub Profile
+            <Github size={16} /> GitHub Profile
           </a>
         </div>
 
         <hr className="info-divider" />
 
-        <h3>⭐ Project Source</h3>
-        <a 
-          href="https://github.com/cameronrye/clarissabot" 
-          target="_blank" 
+        <h3><Github size={18} /> Project Source</h3>
+        <a
+          href="https://github.com/cameronrye/clarissabot"
+          target="_blank"
           rel="noopener noreferrer"
           className="github-repo-link"
         >
-          View on GitHub →
+          View on GitHub <ExternalLink size={14} />
         </a>
       </div>
     </div>
   );
 }
-

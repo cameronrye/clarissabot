@@ -3,53 +3,60 @@
   line-height: 1.5;
   font-weight: 400;
 
-  /* Light theme colors */
-  --color-text: #213547;
-  --color-text-secondary: #666;
-  --color-bg: #f8f9fa;
-  --color-bg-card: white;
-  --color-bg-user-message: #e3f2fd;
-  --color-bg-assistant-message: #f5f5f5;
-  --color-bg-input-disabled: #f5f5f5;
-  --color-border: #e0e0e0;
-  --color-border-input: #ddd;
-  --color-primary: #0066cc;
-  --color-primary-hover: #0052a3;
-  --color-danger: #dc3545;
-  --color-danger-hover: #c82333;
-  --color-error-bg: #ffebee;
-  --color-error-border: #ef9a9a;
-  --color-error-text: #c62828;
-  --color-example-bg: #e3f2fd;
-  --color-code-bg: rgba(0, 0, 0, 0.1);
-  --color-shadow: rgba(0, 0, 0, 0.1);
+  /* Clarissa brand colors */
+  --color-pink: #EC4899;
+  --color-purple: #8B5CF6;
+  --color-cyan: #06B6D4;
+  --gradient: linear-gradient(135deg, #EC4899, #8B5CF6, #06B6D4);
+
+  /* Dark theme (default) */
+  --color-text: #e4e4e7;
+  --color-text-secondary: #a1a1aa;
+  --color-bg: #0f0f10;
+  --color-bg-secondary: #18181b;
+  --color-bg-card: #1f1f23;
+  --color-bg-user-message: #1a1a2e;
+  --color-bg-assistant-message: #27272a;
+  --color-bg-input-disabled: #27272a;
+  --color-border: #2d2d30;
+  --color-border-input: #3f3f46;
+  --color-primary: #06B6D4;
+  --color-primary-hover: #0891b2;
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+  --color-error-bg: #450a0a;
+  --color-error-border: #7f1d1d;
+  --color-error-text: #fca5a5;
+  --color-example-bg: #1a1a2e;
+  --color-code-bg: rgba(255, 255, 255, 0.1);
+  --color-shadow: rgba(0, 0, 0, 0.4);
 
   color: var(--color-text);
   background-color: var(--color-bg);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-text: #e4e4e7;
-    --color-text-secondary: #a1a1aa;
-    --color-bg: #18181b;
-    --color-bg-card: #27272a;
-    --color-bg-user-message: #1e3a5f;
-    --color-bg-assistant-message: #3f3f46;
-    --color-bg-input-disabled: #3f3f46;
-    --color-border: #3f3f46;
-    --color-border-input: #52525b;
-    --color-primary: #3b82f6;
-    --color-primary-hover: #2563eb;
-    --color-danger: #ef4444;
-    --color-danger-hover: #dc2626;
-    --color-error-bg: #450a0a;
-    --color-error-border: #7f1d1d;
-    --color-error-text: #fca5a5;
-    --color-example-bg: #1e3a5f;
-    --color-code-bg: rgba(255, 255, 255, 0.1);
-    --color-shadow: rgba(0, 0, 0, 0.3);
-  }
+/* Light theme - activated by data-theme="light" attribute */
+:root[data-theme="light"] {
+  --color-text: #18181b;
+  --color-text-secondary: #52525b;
+  --color-bg: #fafafa;
+  --color-bg-secondary: #f4f4f5;
+  --color-bg-card: #ffffff;
+  --color-bg-user-message: #ede9fe;
+  --color-bg-assistant-message: #f4f4f5;
+  --color-bg-input-disabled: #e4e4e7;
+  --color-border: #e4e4e7;
+  --color-border-input: #d4d4d8;
+  --color-primary: #0891b2;
+  --color-primary-hover: #0e7490;
+  --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
+  --color-error-bg: #fef2f2;
+  --color-error-border: #fecaca;
+  --color-error-text: #b91c1c;
+  --color-example-bg: #ede9fe;
+  --color-code-bg: rgba(0, 0, 0, 0.08);
+  --color-shadow: rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -60,18 +67,41 @@
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
 
+/* Mobile-first: base styles for mobile */
 #root {
   display: flex;
   flex-direction: column;
   flex: 1;
-  max-width: 1200px;
-  margin: 0 auto;
   width: 100%;
-  padding: 1rem;
+  padding: 0.5rem;
+}
+
+/* sm: 640px+ */
+@media (min-width: 640px) {
+  #root {
+    padding: 0.75rem;
+  }
+}
+
+/* md: 768px+ */
+@media (min-width: 768px) {
+  #root {
+    padding: 1rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+}
+
+/* lg: 1024px+ */
+@media (min-width: 1024px) {
+  #root {
+    max-width: 1000px;
+  }
 }
 
 button {
@@ -82,7 +112,7 @@ button {
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: border-color 0.2s, background-color 0.2s;
 }
 
 button:hover {
@@ -96,6 +126,11 @@ button:disabled {
 
 input, textarea {
   font-family: inherit;
-  font-size: 1em;
+  font-size: 16px; /* Prevents iOS zoom on focus */
 }
 
+@media (min-width: 768px) {
+  input, textarea {
+    font-size: 1em;
+  }
+}
