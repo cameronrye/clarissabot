@@ -53,8 +53,22 @@ param useManagedIdentity bool = false
 @description('User-assigned managed identity ID (optional)')
 param userAssignedIdentityId string = ''
 
+@description('Custom domain hostname (optional)')
+param customDomain string = ''
+
+@description('Managed certificate ID for custom domain (optional)')
+param customDomainCertificateId string = ''
+
 var identityType = useManagedIdentity ? (empty(userAssignedIdentityId) ? 'SystemAssigned' : 'UserAssigned') : 'None'
 var userAssignedIdentities = !empty(userAssignedIdentityId) ? { '${userAssignedIdentityId}': {} } : null
+
+var customDomains = !empty(customDomain) ? [
+  {
+    name: customDomain
+    bindingType: !empty(customDomainCertificateId) ? 'SniEnabled' : 'Disabled'
+    certificateId: !empty(customDomainCertificateId) ? customDomainCertificateId : null
+  }
+] : []
 
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: name
@@ -72,6 +86,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         targetPort: targetPort
         transport: 'auto'
         allowInsecure: false
+        customDomains: !empty(customDomains) ? customDomains : null
       }
       registries: [
         {

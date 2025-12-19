@@ -95,6 +95,21 @@ jobs:
           echo "acr-password=$ACR_PASSWORD" >> $GITHUB_OUTPUT
           echo "openai-endpoint=$OPENAI_ENDPOINT" >> $GITHUB_OUTPUT
 
+      - name: Get managed certificate ID
+        id: cert
+        run: |
+          CERT_ID=$(az containerapp env certificate list \
+            --name clarissabot-env-prod \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --managed-certificates-only \
+            --query "[?properties.subjectName=='bot.clarissa.run'].id" -o tsv 2>/dev/null || echo "")
+          echo "cert-id=$CERT_ID" >> $GITHUB_OUTPUT
+          if [ -n "$CERT_ID" ]; then
+            echo "Found existing certificate: $CERT_ID"
+          else
+            echo "No existing certificate found, domain will be added without SSL binding initially"
+          fi
+
       - name: Deploy infrastructure
         uses: azure/arm-deploy@v2
         id: deploy
@@ -112,6 +127,8 @@ jobs:
             webImage=${{ steps.info.outputs.acr-login-server }}/clarissabot-web:${{ inputs.image_tag }}
             registryPassword=${{ steps.info.outputs.acr-password }}
             apiKey=${{ secrets.API_KEY_PROD }}
+            webCustomDomain=bot.clarissa.run
+            webCustomDomainCertificateId=${{ steps.cert.outputs.cert-id }}
 
       - name: Verify deployment
         run: |

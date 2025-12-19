@@ -28,6 +28,12 @@ param registryPassword string = ''
 @secure()
 param apiKey string = ''
 
+@description('Custom domain for the web app (e.g., bot.clarissa.run)')
+param webCustomDomain string = ''
+
+@description('Managed certificate ID for the custom domain (leave empty for initial setup)')
+param webCustomDomainCertificateId string = ''
+
 var resourceToken = toLower(uniqueString(subscription().id, resourceGroup().id, baseName))
 var tags = {
   application: baseName
@@ -122,6 +128,8 @@ module webApp 'modules/container-app.bicep' = if (!empty(webImage)) {
       { name: 'API_URL', value: !empty(apiImage) ? apiApp.outputs.url : '' }
     ], !empty(apiKey) ? [{ name: 'API_KEY', secretRef: 'api-key' }] : [])
     additionalSecrets: !empty(apiKey) ? [{ name: 'api-key', value: apiKey }] : []
+    customDomain: webCustomDomain
+    customDomainCertificateId: webCustomDomainCertificateId
   }
 }
 
