@@ -38,7 +38,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Test
-        run: dotnet test src/ClarissaBot --configuration Release --verbosity normal
+        run: dotnet test src/ClarissaBot.sln --configuration Release --verbosity normal
 
   build-and-push:
     name: Build & Push Images
