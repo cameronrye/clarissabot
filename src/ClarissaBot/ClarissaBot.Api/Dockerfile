@@ -21,16 +21,11 @@ RUN dotnet publish -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-# Create non-root user for security (using useradd for compatibility with minimal images)
-RUN groupadd --gid 1000 appuser && \
-    useradd --uid 1000 --gid 1000 --shell /bin/false --create-home appuser
-
-# Copy published app
+# Copy published app (the .NET 8+ images already have a non-root 'app' user)
 COPY --from=build /app/publish .
 
-# Set ownership to non-root user
-RUN chown -R appuser:appuser /app
-USER appuser
+# Use the built-in non-root user from .NET 8+ images
+USER app
 
 # Configure ASP.NET Core
 ENV ASPNETCORE_URLS=http://+:8080
