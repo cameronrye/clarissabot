@@ -4,6 +4,7 @@ using System.Net;
 using System.Text.Json;
 using ClarissaBot.Core.Models;
 using ClarissaBot.Core.Services;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
@@ -11,10 +12,12 @@ using Moq.Protected;
 public class NhtsaServiceTests
 {
     private readonly Mock<ILogger<NhtsaService>> _mockLogger;
+    private readonly IMemoryCache _memoryCache;
 
     public NhtsaServiceTests()
     {
         _mockLogger = new Mock<ILogger<NhtsaService>>();
+        _memoryCache = new MemoryCache(new MemoryCacheOptions());
     }
 
     private HttpClient CreateMockHttpClient(string responseContent, HttpStatusCode statusCode = HttpStatusCode.OK)
@@ -48,7 +51,7 @@ public class NhtsaServiceTests
             ]
         };
         var httpClient = CreateMockHttpClient(JsonSerializer.Serialize(expectedResponse));
-        var service = new NhtsaService(httpClient, _mockLogger.Object);
+        var service = new NhtsaService(httpClient, _memoryCache, _mockLogger.Object);
 
         // Act
         var result = await service.GetRecallsAsync("Acura", "RDX", 2012);
@@ -66,7 +69,7 @@ public class NhtsaServiceTests
         // Arrange
         var expectedResponse = new RecallResponse { Count = 0, Results = [] };
         var httpClient = CreateMockHttpClient(JsonSerializer.Serialize(expectedResponse));
-        var service = new NhtsaService(httpClient, _mockLogger.Object);
+        var service = new NhtsaService(httpClient, _memoryCache, _mockLogger.Object);
 
         // Act
         var result = await service.GetRecallsAsync("Unknown", "Car", 2020);
@@ -97,7 +100,7 @@ public class NhtsaServiceTests
             ]
         };
         var httpClient = CreateMockHttpClient(JsonSerializer.Serialize(expectedResponse));
-        var service = new NhtsaService(httpClient, _mockLogger.Object);
+        var service = new NhtsaService(httpClient, _memoryCache, _mockLogger.Object);
 
         // Act
         var result = await service.GetComplaintsAsync("Tesla", "Model 3", 2020);
@@ -122,7 +125,7 @@ public class NhtsaServiceTests
             .ThrowsAsync(new HttpRequestException("Network error"));
 
         var httpClient = new HttpClient(mockHandler.Object);
-        var service = new NhtsaService(httpClient, _mockLogger.Object);
+        var service = new NhtsaService(httpClient, _memoryCache, _mockLogger.Object);
 
         // Act
         var result = await service.GetRecallsAsync("Test", "Car", 2020);

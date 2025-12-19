@@ -34,9 +34,9 @@ ENV DOTNET_RUNNING_IN_CONTAINER=true
 
 EXPOSE 8080
 
-# Health check
+# Health check (using wget as it's available in aspnet images, unlike curl)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8080/api/health || exit 1
+  CMD wget --quiet --tries=1 --spider http://localhost:8080/api/health || exit 1
 
 ENTRYPOINT ["dotnet", "ClarissaBot.Api.dll"]
 
