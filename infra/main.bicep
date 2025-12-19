@@ -118,9 +118,10 @@ module webApp 'modules/container-app.bicep' = if (!empty(webImage)) {
     minReplicas: 0
     maxReplicas: 3
     tags: tags
-    envVars: [
+    envVars: concat([
       { name: 'API_URL', value: !empty(apiImage) ? apiApp.outputs.url : '' }
-    ]
+    ], !empty(apiKey) ? [{ name: 'API_KEY', secretRef: 'api-key' }] : [])
+    additionalSecrets: !empty(apiKey) ? [{ name: 'api-key', value: apiKey }] : []
   }
 }
 
