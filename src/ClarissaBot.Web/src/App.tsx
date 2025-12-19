@@ -162,7 +162,10 @@ function App() {
               <li><Star size={18} /> <strong>Safety Ratings</strong> - Get NCAP crash test ratings</li>
               <li><FileText size={18} /> <strong>Complaints</strong> - View consumer complaints</li>
             </ul>
-            <p className="example">Try asking: "Are there any recalls on the 2020 Tesla Model 3?"</p>
+            <p className="example">
+              <span className="example-label">Try asking:</span>
+              <span className="example-text">"Any recalls on the 2020 Tesla Model 3?"</span>
+            </p>
           </div>
         ) : (
           <div className="messages">

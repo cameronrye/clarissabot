@@ -8,9 +8,22 @@ interface ChatInputProps {
   onCancel?: () => void;
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return isMobile;
+}
+
 export function ChatInput({ onSend, disabled, isStreaming, onCancel }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!disabled && textareaRef.current) {
@@ -40,7 +53,7 @@ export function ChatInput({ onSend, disabled, isStreaming, onCancel }: ChatInput
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Ask about vehicle recalls, safety ratings, or complaints..."
+        placeholder={isMobile ? "Ask about vehicle safety..." : "Ask about vehicle recalls, safety ratings, or complaints..."}
         disabled={disabled}
         rows={1}
       />
