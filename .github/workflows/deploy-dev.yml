@@ -153,6 +153,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           template: infra/main.bicep
+          failOnStdErr: false
           parameters: >
             baseName=${{ env.BASE_NAME }}
             location=${{ env.AZURE_LOCATION }}
