@@ -4,9 +4,13 @@ set -e
 # Substitute API_URL environment variable in nginx config
 if [ -n "$API_URL" ]; then
     sed -i "s|API_URL_PLACEHOLDER|$API_URL|g" /etc/nginx/nginx.conf
+    # Extract the host from the API_URL for SSL SNI
+    API_HOST=$(echo "$API_URL" | sed -e 's|^https://||' -e 's|^http://||' -e 's|/.*$||')
+    sed -i "s|API_HOST_PLACEHOLDER|$API_HOST|g" /etc/nginx/nginx.conf
 else
     # Default to the API container app URL pattern
     sed -i "s|API_URL_PLACEHOLDER|http://clarissabot-api-dev|g" /etc/nginx/nginx.conf
+    sed -i "s|API_HOST_PLACEHOLDER|clarissabot-api-dev|g" /etc/nginx/nginx.conf
 fi
 
 # Substitute API_KEY environment variable in nginx config
