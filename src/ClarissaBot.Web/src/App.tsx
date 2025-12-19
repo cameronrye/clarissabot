@@ -3,6 +3,7 @@ import type { ChatMessage as ChatMessageType } from './types/chat';
 import { streamChatMessage } from './services/chatService';
 import { ChatMessage } from './components/ChatMessage';
 import { ChatInput } from './components/ChatInput';
+import { InfoOverlay } from './components/InfoOverlay';
 import './App.css';
 
 function App() {
@@ -10,6 +11,8 @@ function App() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showInfo, setShowInfo] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -103,6 +106,7 @@ function App() {
     setMessages([]);
     setConversationId(null);
     setError(null);
+    setShowClearConfirm(false);
   }, []);
 
   return (
@@ -110,12 +114,35 @@ function App() {
       <header className="app-header">
         <h1>🚗 Clarissa</h1>
         <p>NHTSA Vehicle Safety Assistant</p>
-        {messages.length > 0 && (
-          <button onClick={handleClearChat} className="clear-button">
-            Clear Chat
+        <div className="header-actions">
+          {messages.length > 0 && (
+            <button onClick={() => setShowClearConfirm(true)} className="clear-button">
+              Clear Chat
+            </button>
+          )}
+          <button onClick={() => setShowInfo(true)} className="info-button" aria-label="About">
+            ⓘ
           </button>
-        )}
+        </div>
       </header>
+
+      {showClearConfirm && (
+        <div className="confirm-overlay" onClick={() => setShowClearConfirm(false)}>
+          <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
+            <p>Are you sure you want to clear the chat?</p>
+            <div className="confirm-actions">
+              <button onClick={() => setShowClearConfirm(false)} className="confirm-cancel">
+                Cancel
+              </button>
+              <button onClick={handleClearChat} className="confirm-clear">
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <InfoOverlay isOpen={showInfo} onClose={() => setShowInfo(false)} />
 
       <main className="chat-container">
         {messages.length === 0 ? (

@@ -26,6 +26,12 @@
   flex: 1;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .clear-button {
   background-color: transparent;
   color: var(--color-text-secondary);
@@ -36,6 +42,88 @@
 
 .clear-button:hover {
   background-color: var(--color-bg-assistant-message);
+}
+
+.info-button {
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-input);
+  font-size: 1rem;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.info-button:hover {
+  background-color: var(--color-bg-assistant-message);
+  color: var(--color-text);
+}
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.confirm-dialog {
+  background-color: var(--color-bg-card);
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 320px;
+  width: 100%;
+  box-shadow: 0 8px 32px var(--color-shadow);
+  text-align: center;
+}
+
+.confirm-dialog p {
+  margin: 0 0 1.25rem 0;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.confirm-cancel {
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-input);
+  padding: 0.5rem 1.25rem;
+}
+
+.confirm-cancel:hover {
+  background-color: var(--color-bg-assistant-message);
+}
+
+.confirm-clear {
+  background-color: var(--color-danger);
+  color: white;
+  border: none;
+  padding: 0.5rem 1.25rem;
+}
+
+.confirm-clear:hover {
+  background-color: var(--color-danger-hover);
 }
 
 .chat-container {

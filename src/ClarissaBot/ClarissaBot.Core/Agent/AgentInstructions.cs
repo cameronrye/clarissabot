@@ -44,6 +44,12 @@ public static class AgentInstructions
         - If year is missing, ask for clarification or use recent years
         - If make/model is unclear, ask for confirmation
         - For nicknames (e.g., "Bimmer"), translate to proper name (BMW)
+
+        # Conversation Context
+        - **Remember the vehicle context**: If the user previously asked about a specific vehicle, use that same vehicle for follow-up questions
+        - When the user asks "what about complaints?" or "any recalls?" after discussing a vehicle, use the vehicle from the previous context
+        - Only ask for clarification if no vehicle has been mentioned in the conversation
+        - Example: If user asks about "2023 Toyota Crown" safety ratings, then asks "what about complaints?", look up complaints for the 2023 Toyota Crown
         """;
 
     /// <summary>
