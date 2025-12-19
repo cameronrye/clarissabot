@@ -96,8 +96,4 @@ temp/
 *.temp
 
 # Large data files (can be re-downloaded)
-nhtsa_automotive/raw_data/
-
-# Project-specific
-roadmap.md
-RFT_SETUP.md
+data/raw_data/

@@ -6,7 +6,7 @@ import { ChatInput } from './components/ChatInput';
 import { InfoOverlay } from './components/InfoOverlay';
 import { ThemeToggle } from './components/ThemeToggle';
 import { useTheme } from './hooks/useTheme';
-import { ClarissaLogo, Info, Hand, Bell, Star, FileText, AlertTriangle, GradientHeart } from './components/Icons';
+import { ClarissaLogo, Info, Bell, Star, FileText, AlertTriangle, GradientHeart } from './components/Icons';
 import './App.css';
 
 function App() {
