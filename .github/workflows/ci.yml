@@ -20,9 +20,6 @@ jobs:
   build-api:
     name: Build & Test API
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src/ClarissaBot
 
     steps:
       - name: Checkout
@@ -34,13 +31,13 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore src/ClarissaBot.sln
 
       - name: Build
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build src/ClarissaBot.sln --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage"
+        run: dotnet test src/ClarissaBot.sln --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage"
 
       - name: Upload test results
         uses: actions/upload-artifact@v6
@@ -141,7 +138,7 @@ jobs:
       - name: Run security scan
         run: |
           dotnet tool install --global security-scan || true
-          dotnet restore src/ClarissaBot
+          dotnet restore src/ClarissaBot.sln
           # Run basic security checks
           echo "Checking for common security issues..."
           ! grep -rn "password\s*=" --include="*.cs" src/ClarissaBot || echo "Review password assignments"
