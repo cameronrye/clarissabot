@@ -76,7 +76,10 @@ if (!app.Environment.IsDevelopment())
 app.UseStatusCodePages();
 app.UseCors("AllowFrontend");
 
-// API Key authentication (skipped if no API_KEY configured)
+// Rate limiting (before authentication to prevent DoS)
+app.UseRateLimiting();
+
+// API Key authentication (skipped if no API_KEY configured in development)
 app.UseApiKeyAuthentication();
 
 // Health check endpoint

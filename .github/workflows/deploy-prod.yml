@@ -1,0 +1,144 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy (default: latest)'
+        type: string
+        default: 'latest'
+      confirm:
+        description: 'Type "DEPLOY" to confirm production deployment'
+        type: string
+        required: true
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  AZURE_RESOURCE_GROUP: clarissabot-rg
+  AZURE_LOCATION: eastus
+  ENVIRONMENT: prod
+  BASE_NAME: clarissabot
+
+jobs:
+  validate:
+    name: Validate Deployment
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Validate confirmation
+        if: ${{ inputs.confirm != 'DEPLOY' }}
+        run: |
+          echo "::error::Deployment not confirmed. Please type 'DEPLOY' to confirm."
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
+
+      - name: Validate image exists
+        run: |
+          ACR_NAME=$(az acr list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "[0].name" -o tsv)
+          
+          echo "Checking for API image with tag: ${{ inputs.image_tag }}"
+          az acr repository show-tags --name $ACR_NAME --repository clarissabot-api | grep -q "${{ inputs.image_tag }}" || {
+            echo "::error::API image with tag '${{ inputs.image_tag }}' not found"
+            exit 1
+          }
+          
+          echo "Checking for Web image with tag: ${{ inputs.image_tag }}"
+          az acr repository show-tags --name $ACR_NAME --repository clarissabot-web | grep -q "${{ inputs.image_tag }}" || {
+            echo "::error::Web image with tag '${{ inputs.image_tag }}' not found"
+            exit 1
+          }
+          
+          echo "✓ All images found"
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [validate]
+    # Note: Environment protection rules (required reviewers) need GitHub Team/Enterprise
+    # The "DEPLOY" confirmation input provides a manual safety check instead
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
+
+      - name: Create resource group if needed
+        run: |
+          az group create --name ${{ env.AZURE_RESOURCE_GROUP }} --location ${{ env.AZURE_LOCATION }} --output none || true
+
+      - name: Get deployment info
+        id: info
+        run: |
+          # Get ACR (shared registry)
+          ACR_NAME=$(az acr list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "[0].name" -o tsv)
+          ACR_LOGIN_SERVER=$(az acr show --name $ACR_NAME --query "loginServer" -o tsv)
+          ACR_PASSWORD=$(az acr credential show --name $ACR_NAME --query "passwords[0].value" -o tsv)
+          
+          OPENAI_ENDPOINT=$(az cognitiveservices account show \
+            --name ${{ secrets.OPENAI_ACCOUNT_NAME }} \
+            --resource-group ${{ secrets.OPENAI_RESOURCE_GROUP }} \
+            --query "properties.endpoint" -o tsv)
+          
+          echo "acr-login-server=$ACR_LOGIN_SERVER" >> $GITHUB_OUTPUT
+          echo "acr-password=$ACR_PASSWORD" >> $GITHUB_OUTPUT
+          echo "openai-endpoint=$OPENAI_ENDPOINT" >> $GITHUB_OUTPUT
+
+      - name: Deploy infrastructure
+        uses: azure/arm-deploy@v2
+        id: deploy
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          template: infra/main.bicep
+          parameters: >
+            baseName=${{ env.BASE_NAME }}
+            location=${{ env.AZURE_LOCATION }}
+            environment=${{ env.ENVIRONMENT }}
+            azureOpenAIEndpoint=${{ steps.info.outputs.openai-endpoint }}
+            azureOpenAIDeploymentName=${{ secrets.OPENAI_DEPLOYMENT_NAME }}
+            apiImage=${{ steps.info.outputs.acr-login-server }}/clarissabot-api:${{ inputs.image_tag }}
+            webImage=${{ steps.info.outputs.acr-login-server }}/clarissabot-web:${{ inputs.image_tag }}
+            registryPassword=${{ steps.info.outputs.acr-password }}
+            apiKey=${{ secrets.API_KEY_PROD }}
+
+      - name: Verify deployment
+        run: |
+          API_URL="${{ steps.deploy.outputs.apiUrl }}"
+          echo "Verifying API health at $API_URL/api/health..."
+          
+          for i in {1..10}; do
+            if curl -sf "$API_URL/api/health" > /dev/null 2>&1; then
+              echo "✓ API is healthy"
+              exit 0
+            fi
+            echo "Waiting for API to become healthy... (attempt $i/10)"
+            sleep 10
+          done
+          
+          echo "::error::API health check failed after 10 attempts"
+          exit 1
+
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Production Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Resource | URL |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-----|" >> $GITHUB_STEP_SUMMARY
+          echo "| API | ${{ steps.deploy.outputs.apiUrl }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Web | ${{ steps.deploy.outputs.webUrl }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image Tag:** \`${{ inputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed by:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed at:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+

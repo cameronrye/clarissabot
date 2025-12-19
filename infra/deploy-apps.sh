@@ -128,14 +128,23 @@ echo "API URL: $API_URL"
 [ -n "$WEB_URL" ] && [ "$WEB_URL" != "" ] && echo "Web URL: $WEB_URL"
 echo ""
 echo -e "${YELLOW}🔐 API Key (save this securely):${NC}"
-echo "  $API_KEY"
+# Mask the API key in output to prevent leaking in CI logs
+MASKED_KEY="${API_KEY:0:4}****${API_KEY: -4}"
+echo "  $MASKED_KEY (masked for security)"
+echo ""
+echo -e "${YELLOW}To retrieve the full API key, run:${NC}"
+echo "  az containerapp secret show --name <app-name> --resource-group $RESOURCE_GROUP --secret-name api-key"
 echo ""
 echo "Test the API:"
 echo "  curl $API_URL/api/health"
 echo ""
-echo "Test authenticated endpoint:"
-echo "  curl -X POST $API_URL/api/chat -H 'Content-Type: application/json' -H 'X-API-Key: $API_KEY' -d '{\"message\": \"Hello\"}'"
+echo "Test authenticated endpoint (replace <API_KEY> with your key):"
+echo "  curl -X POST $API_URL/api/chat -H 'Content-Type: application/json' -H 'X-API-Key: <API_KEY>' -d '{\"message\": \"Hello\"}'"
 echo ""
 echo "For frontend build, set environment variable:"
-echo "  VITE_API_KEY=$API_KEY npm run build"
+echo "  VITE_API_KEY=<API_KEY> npm run build"
+
+# Store API key in a local file for reference (gitignored)
+echo "$API_KEY" > .api-key-$ENVIRONMENT
+echo -e "${GREEN}✓ Full API key saved to .api-key-$ENVIRONMENT (gitignored)${NC}"
 

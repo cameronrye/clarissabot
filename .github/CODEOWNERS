@@ -1,0 +1,15 @@
+# Default owners for everything
+* @cameronrye
+
+# Infrastructure changes require review
+/infra/ @cameronrye
+
+# CI/CD changes require review  
+/.github/ @cameronrye
+
+# API changes
+/src/ClarissaBot/ @cameronrye
+
+# Web frontend changes
+/src/ClarissaBot.Web/ @cameronrye
+

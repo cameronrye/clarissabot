@@ -7,39 +7,75 @@ using System.Text;
 using System.Text.Json;
 using Azure.AI.OpenAI;
 using ClarissaBot.Core.Tools;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OpenAI.Chat;
 
 /// <summary>
 /// Clarissa AI agent implementation using Azure OpenAI with function calling.
+/// Includes automatic conversation cleanup to prevent memory leaks.
 /// </summary>
-public class ClarissaAgent : IClarissaAgent
+public class ClarissaAgent : IClarissaAgent, IDisposable
 {
     private readonly ChatClient _chatClient;
     private readonly NhtsaTools _nhtsaTools;
     private readonly ILogger<ClarissaAgent> _logger;
-    private readonly ConcurrentDictionary<string, List<ChatMessage>> _conversations = new();
+    private readonly ConcurrentDictionary<string, ConversationEntry> _conversations = new();
     private readonly List<ChatTool> _tools;
+    private readonly Timer _cleanupTimer;
+    private readonly TimeSpan _maxIdleTime;
+    private readonly int _maxConversations;
+    private bool _disposed;
 
     private const int MaxRetries = 3;
     private const int MaxToolIterations = 10;
 
+    /// <summary>
+    /// Tracks a conversation and its last access time.
+    /// </summary>
+    private sealed class ConversationEntry
+    {
+        public List<ChatMessage> Messages { get; }
+        public DateTime LastAccessedUtc { get; set; }
+
+        public ConversationEntry(List<ChatMessage> messages)
+        {
+            Messages = messages;
+            LastAccessedUtc = DateTime.UtcNow;
+        }
+    }
+
     public ClarissaAgent(
         ChatClient chatClient,
         NhtsaTools nhtsaTools,
-        ILogger<ClarissaAgent> logger)
+        ILogger<ClarissaAgent> logger,
+        IConfiguration? configuration = null)
     {
         _chatClient = chatClient;
         _nhtsaTools = nhtsaTools;
         _logger = logger;
         _tools = CreateToolDefinitions();
+
+        // Configure conversation cleanup from settings
+        var maxIdleMinutes = configuration?.GetValue("Conversations:MaxIdleMinutes", 60) ?? 60;
+        var cleanupIntervalMinutes = configuration?.GetValue("Conversations:CleanupIntervalMinutes", 5) ?? 5;
+        _maxConversations = configuration?.GetValue("Conversations:MaxConversations", 10000) ?? 10000;
+        _maxIdleTime = TimeSpan.FromMinutes(maxIdleMinutes);
+
+        // Start cleanup timer
+        _cleanupTimer = new Timer(
+            CleanupExpiredConversations,
+            null,
+            TimeSpan.FromMinutes(cleanupIntervalMinutes),
+            TimeSpan.FromMinutes(cleanupIntervalMinutes));
     }
 
     /// <inheritdoc />
     public async Task<string> ChatAsync(string userMessage, string? conversationId = null, CancellationToken cancellationToken = default)
     {
         conversationId ??= "default";
-        var messages = _conversations.GetOrAdd(conversationId, _ => [new SystemChatMessage(AgentInstructions.GetInstructions())]);
+        var entry = GetOrCreateConversation(conversationId);
+        var messages = entry.Messages;
 
         messages.Add(new UserChatMessage(userMessage));
         _logger.LogDebug("User: {Message}", userMessage);
@@ -59,7 +95,17 @@ public class ClarissaAgent : IClarissaAgent
             }
             else
             {
-                var responseText = completion.Content[0].Text;
+                // Safely access response content with null check
+                var responseText = completion.Content is { Count: > 0 }
+                    ? completion.Content[0].Text ?? string.Empty
+                    : string.Empty;
+
+                if (string.IsNullOrEmpty(responseText))
+                {
+                    _logger.LogWarning("Received empty response from OpenAI");
+                    responseText = "I apologize, but I was unable to generate a response. Please try again.";
+                }
+
                 messages.Add(new AssistantChatMessage(responseText));
                 _logger.LogDebug("Assistant: {Response}", TruncateForLog(responseText));
                 return responseText;
@@ -76,7 +122,8 @@ public class ClarissaAgent : IClarissaAgent
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         conversationId ??= "default";
-        var messages = _conversations.GetOrAdd(conversationId, _ => [new SystemChatMessage(AgentInstructions.GetInstructions())]);
+        var entry = GetOrCreateConversation(conversationId);
+        var messages = entry.Messages;
 
         messages.Add(new UserChatMessage(userMessage));
         _logger.LogDebug("User: {Message}", userMessage);
@@ -157,6 +204,84 @@ public class ClarissaAgent : IClarissaAgent
     {
         conversationId ??= "default";
         _conversations.TryRemove(conversationId, out _);
+    }
+
+    /// <summary>
+    /// Gets or creates a conversation entry, updating the last access time.
+    /// </summary>
+    private ConversationEntry GetOrCreateConversation(string conversationId)
+    {
+        var entry = _conversations.GetOrAdd(conversationId, _ =>
+            new ConversationEntry([new SystemChatMessage(AgentInstructions.GetInstructions())]));
+
+        entry.LastAccessedUtc = DateTime.UtcNow;
+
+        // Evict oldest conversations if we exceed the limit
+        if (_conversations.Count > _maxConversations)
+        {
+            EvictOldestConversations();
+        }
+
+        return entry;
+    }
+
+    /// <summary>
+    /// Removes expired conversations that have been idle too long.
+    /// </summary>
+    private void CleanupExpiredConversations(object? state)
+    {
+        var cutoff = DateTime.UtcNow - _maxIdleTime;
+        var expiredKeys = _conversations
+            .Where(kvp => kvp.Value.LastAccessedUtc < cutoff)
+            .Select(kvp => kvp.Key)
+            .ToList();
+
+        foreach (var key in expiredKeys)
+        {
+            if (_conversations.TryRemove(key, out _))
+            {
+                _logger.LogDebug("Removed expired conversation: {ConversationId}", key);
+            }
+        }
+
+        if (expiredKeys.Count > 0)
+        {
+            _logger.LogInformation("Cleaned up {Count} expired conversations", expiredKeys.Count);
+        }
+    }
+
+    /// <summary>
+    /// Evicts the oldest conversations when the limit is exceeded.
+    /// </summary>
+    private void EvictOldestConversations()
+    {
+        var excess = _conversations.Count - _maxConversations + 100; // Remove 100 extra to avoid frequent evictions
+        if (excess <= 0) return;
+
+        var oldestKeys = _conversations
+            .OrderBy(kvp => kvp.Value.LastAccessedUtc)
+            .Take(excess)
+            .Select(kvp => kvp.Key)
+            .ToList();
+
+        foreach (var key in oldestKeys)
+        {
+            _conversations.TryRemove(key, out _);
+        }
+
+        _logger.LogInformation("Evicted {Count} oldest conversations due to capacity limit", oldestKeys.Count);
+    }
+
+    /// <summary>
+    /// Disposes resources used by the agent.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _cleanupTimer.Dispose();
+        _conversations.Clear();
+        _disposed = true;
+        GC.SuppressFinalize(this);
     }
 
     private ChatCompletionOptions CreateChatOptions()

@@ -30,11 +30,12 @@ public class NhtsaService : INhtsaService
     /// <inheritdoc />
     public async Task<RecallResponse> GetRecallsAsync(string make, string model, int year, CancellationToken cancellationToken = default)
     {
+        var encodedMake = HttpUtility.UrlEncode(make);
         var encodedModel = HttpUtility.UrlEncode(model);
-        var url = $"{BaseUrl}/recalls/recallsByVehicle?make={make}&model={encodedModel}&modelYear={year}";
-        
+        var url = $"{BaseUrl}/recalls/recallsByVehicle?make={encodedMake}&model={encodedModel}&modelYear={year}";
+
         _logger.LogInformation("Fetching recalls for {Year} {Make} {Model}", year, make, model);
-        
+
         try
         {
             var response = await _httpClient.GetFromJsonAsync<RecallResponse>(url, _jsonOptions, cancellationToken);
@@ -50,11 +51,12 @@ public class NhtsaService : INhtsaService
     /// <inheritdoc />
     public async Task<ComplaintResponse> GetComplaintsAsync(string make, string model, int year, CancellationToken cancellationToken = default)
     {
+        var encodedMake = HttpUtility.UrlEncode(make);
         var encodedModel = HttpUtility.UrlEncode(model);
-        var url = $"{BaseUrl}/complaints/complaintsByVehicle?make={make}&model={encodedModel}&modelYear={year}";
-        
+        var url = $"{BaseUrl}/complaints/complaintsByVehicle?make={encodedMake}&model={encodedModel}&modelYear={year}";
+
         _logger.LogInformation("Fetching complaints for {Year} {Make} {Model}", year, make, model);
-        
+
         try
         {
             var response = await _httpClient.GetFromJsonAsync<ComplaintResponse>(url, _jsonOptions, cancellationToken);
@@ -70,7 +72,9 @@ public class NhtsaService : INhtsaService
     /// <inheritdoc />
     public async Task<SafetyRating?> GetSafetyRatingAsync(string make, string model, int year, CancellationToken cancellationToken = default)
     {
-        var url = $"{BaseUrl}/SafetyRatings/modelyear/{year}/make/{make}/model/{model}";
+        var encodedMake = Uri.EscapeDataString(make);
+        var encodedModel = Uri.EscapeDataString(model);
+        var url = $"{BaseUrl}/SafetyRatings/modelyear/{year}/make/{encodedMake}/model/{encodedModel}";
         
         _logger.LogInformation("Fetching safety ratings for {Year} {Make} {Model}", year, make, model);
         
