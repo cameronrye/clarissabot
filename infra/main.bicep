@@ -100,6 +100,7 @@ module apiApp 'modules/container-app.bicep' = if (!empty(apiImage)) {
       { name: 'AzureOpenAI__Endpoint', value: azureOpenAIEndpoint }
       { name: 'AzureOpenAI__DeploymentName', value: azureOpenAIDeploymentName }
       { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: monitoring.outputs.appInsightsConnectionString }
+      { name: 'Cors__AllowedOrigins__0', value: !empty(webCustomDomain) ? 'https://${webCustomDomain}' : '' }
     ], !empty(apiKey) ? [{ name: 'API_KEY', secretRef: 'api-key' }] : [])
     additionalSecrets: !empty(apiKey) ? [{ name: 'api-key', value: apiKey }] : []
   }
