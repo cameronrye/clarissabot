@@ -1,4 +1,4 @@
-import type { StreamEvent } from '../types/chat';
+import type { StreamEvent, ToolCallInfo, VehicleContext } from '../types/chat';
 
 /**
  * Get the API key from environment or config.
@@ -30,7 +30,7 @@ function getApiHeaders(): Record<string, string> {
  */
 function parseSseLine(line: string): StreamEvent | null {
   if (!line.startsWith('data: ')) return null;
-  
+
   try {
     const data = JSON.parse(line.slice(6));
     return data as StreamEvent;
@@ -51,6 +51,9 @@ function splitSseBuffer(buffer: string): [string[], string] {
 export interface ChatStreamCallbacks {
   onConversationId?: (conversationId: string) => void;
   onChunk?: (content: string) => void;
+  onToolCall?: (toolCall: ToolCallInfo) => void;
+  onToolResult?: (toolName: string, success: boolean) => void;
+  onVehicleContext?: (context: VehicleContext) => void;
   onUsage?: (duration: number) => void;
   onDone?: () => void;
   onError?: (message: string) => void;
@@ -110,6 +113,24 @@ export async function streamChatMessage(
             break;
           case 'chunk':
             callbacks.onChunk?.(event.content!);
+            break;
+          case 'toolCall':
+            callbacks.onToolCall?.({
+              toolName: event.toolName!,
+              description: event.description!,
+              vehicleInfo: event.vehicleInfo,
+            });
+            break;
+          case 'toolResult':
+            callbacks.onToolResult?.(event.toolName!, event.success!);
+            break;
+          case 'vehicleContext':
+            callbacks.onVehicleContext?.({
+              year: event.year!,
+              make: event.make!,
+              model: event.model!,
+              display: event.display!,
+            });
             break;
           case 'usage':
             callbacks.onUsage?.(event.duration!);

@@ -42,7 +42,8 @@ public class NhtsaTools
         {
             found = true,
             count = recalls.Count,
-            recalls = recallSummaries
+            recalls = recallSummaries,
+            nhtsaLink = $"https://www.nhtsa.gov/vehicle/{year}/{make}/{model}#recalls"
         });
     }
 
@@ -52,7 +53,7 @@ public class NhtsaTools
     public async Task<string> GetComplaintsAsync(string make, string model, int year)
     {
         var complaints = await _nhtsaService.GetComplaintsAsync(make, model, year);
-        
+
         if (complaints.Count == 0)
         {
             return JsonSerializer.Serialize(new
@@ -74,7 +75,8 @@ public class NhtsaTools
         {
             found = true,
             count = complaints.Count,
-            complaints = topComplaints
+            complaints = topComplaints,
+            nhtsaLink = $"https://www.nhtsa.gov/vehicle/{year}/{make}/{model}#complaints"
         });
     }
 
@@ -103,7 +105,77 @@ public class NhtsaTools
             sideCrashRating = rating.OverallSideCrashRating,
             rolloverRating = rating.RolloverRating,
             forwardCollisionWarning = rating.ForwardCollisionWarning,
-            laneDepartureWarning = rating.LaneDepartureWarning
+            laneDepartureWarning = rating.LaneDepartureWarning,
+            nhtsaLink = $"https://www.nhtsa.gov/vehicle/{year}/{make}/{model}"
+        });
+    }
+
+    /// <summary>
+    /// Decode a VIN to get vehicle information.
+    /// </summary>
+    public async Task<string> DecodeVinAsync(string vin)
+    {
+        var vehicle = await _nhtsaService.DecodeVinAsync(vin);
+
+        if (vehicle == null || vehicle.ErrorCode == "INVALID_VIN" || vehicle.ErrorCode == "NOT_FOUND")
+        {
+            return JsonSerializer.Serialize(new
+            {
+                found = false,
+                message = vehicle?.ErrorText ?? "Could not decode VIN",
+                vin
+            });
+        }
+
+        return JsonSerializer.Serialize(new
+        {
+            found = true,
+            vin = vehicle.Vin,
+            year = vehicle.Year,
+            make = vehicle.Make,
+            model = vehicle.Model,
+            trim = vehicle.Trim,
+            vehicleType = vehicle.VehicleType,
+            bodyClass = vehicle.BodyClass,
+            driveType = vehicle.DriveType,
+            fuelType = vehicle.FuelType,
+            engineSize = vehicle.EngineSize,
+            engineCylinders = vehicle.EngineCylinders,
+            transmissionStyle = vehicle.TransmissionStyle,
+            plantCountry = vehicle.PlantCountry
+        });
+    }
+
+    /// <summary>
+    /// Check for active NHTSA investigations on a vehicle.
+    /// </summary>
+    public async Task<string> CheckInvestigationsAsync(string make, string model, int year)
+    {
+        var investigations = await _nhtsaService.GetInvestigationsAsync(make, model, year);
+
+        if (investigations.Count == 0)
+        {
+            return JsonSerializer.Serialize(new
+            {
+                found = false,
+                message = $"No active investigations found for {year} {make} {model}."
+            });
+        }
+
+        var investigationSummaries = investigations.Results?.Take(5).Select(i => new
+        {
+            campaignNumber = i.CampaignNumber,
+            component = i.ComponentName,
+            subject = i.Subject,
+            summary = i.Summary?.Length > 200 ? i.Summary[..200] + "..." : i.Summary
+        }).ToList();
+
+        return JsonSerializer.Serialize(new
+        {
+            found = true,
+            count = investigations.Count,
+            investigations = investigationSummaries,
+            nhtsaLink = $"https://www.nhtsa.gov/vehicle/{year}/{make}/{model}#investigations"
         });
     }
 }

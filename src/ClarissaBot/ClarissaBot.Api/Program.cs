@@ -4,6 +4,7 @@ using ClarissaBot.Api.Middleware;
 using ClarissaBot.Api.Models;
 using ClarissaBot.Core.Agent;
 using ClarissaBot.Core.Extensions;
+using ClarissaBot.Core.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,7 +95,7 @@ app.MapGet("/api/health", () => Results.Ok(new
 }))
 .WithName("GetHealth");
 
-// Streaming Chat endpoint: Streams agent response via SSE
+// Streaming Chat endpoint: Streams agent response via SSE with rich events
 app.MapPost("/api/chat/stream", async (
     ChatRequest request,
     IClarissaAgent agent,
@@ -114,12 +115,12 @@ app.MapPost("/api/chat/stream", async (
 
         var startTime = DateTime.UtcNow;
 
-        await foreach (var chunk in agent.ChatStreamAsync(
+        await foreach (var streamEvent in agent.ChatStreamRichAsync(
             request.Message,
             conversationId,
             cancellationToken))
         {
-            await WriteChunkEvent(httpContext.Response, chunk, cancellationToken);
+            await WriteStreamingEvent(httpContext.Response, streamEvent, cancellationToken);
         }
 
         var duration = (DateTime.UtcNow - startTime).TotalMilliseconds;
@@ -195,9 +196,34 @@ static async Task WriteConversationIdEvent(HttpResponse response, string convers
     await response.Body.FlushAsync(ct);
 }
 
-static async Task WriteChunkEvent(HttpResponse response, string content, CancellationToken ct)
+static async Task WriteStreamingEvent(HttpResponse response, StreamingEvent streamEvent, CancellationToken ct)
 {
-    var json = System.Text.Json.JsonSerializer.Serialize(new { type = "chunk", content });
+    var json = streamEvent switch
+    {
+        ContentChunkEvent chunk => System.Text.Json.JsonSerializer.Serialize(new { type = "chunk", chunk.Content }),
+        ToolCallEvent toolCall => System.Text.Json.JsonSerializer.Serialize(new
+        {
+            type = "toolCall",
+            toolName = toolCall.ToolName,
+            description = toolCall.Description,
+            vehicleInfo = toolCall.VehicleInfo
+        }),
+        ToolResultEvent toolResult => System.Text.Json.JsonSerializer.Serialize(new
+        {
+            type = "toolResult",
+            toolName = toolResult.ToolName,
+            success = toolResult.Success
+        }),
+        VehicleContextEvent vehicleContext => System.Text.Json.JsonSerializer.Serialize(new
+        {
+            type = "vehicleContext",
+            year = vehicleContext.Year,
+            make = vehicleContext.Make,
+            model = vehicleContext.Model,
+            display = vehicleContext.Display
+        }),
+        _ => System.Text.Json.JsonSerializer.Serialize(new { type = "unknown" })
+    };
     await response.WriteAsync($"data: {json}\n\n", ct);
     await response.Body.FlushAsync(ct);
 }

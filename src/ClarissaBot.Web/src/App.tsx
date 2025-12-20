@@ -1,10 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import type { ChatMessage as ChatMessageType } from './types/chat';
+import type { ChatMessage as ChatMessageType, VehicleContext, ToolCallInfo } from './types/chat';
 import { streamChatMessage } from './services/chatService';
 import { ChatMessage } from './components/ChatMessage';
 import { ChatInput } from './components/ChatInput';
 import { InfoOverlay } from './components/InfoOverlay';
 import { ThemeToggle } from './components/ThemeToggle';
+import { VehicleContextBadge } from './components/VehicleContextBadge';
 import { useTheme } from './hooks/useTheme';
 import { ClarissaLogo, Info, Bell, Star, FileText, AlertTriangle, GradientHeart } from './components/Icons';
 import './App.css';
@@ -16,6 +17,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [showInfo, setShowInfo] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [vehicleContext, setVehicleContext] = useState<VehicleContext | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { theme, setTheme } = useTheme();
@@ -65,14 +67,33 @@ function App() {
           onChunk: (chunk) => {
             setMessages(prev => prev.map(msg =>
               msg.id === assistantId
-                ? { ...msg, content: msg.content + chunk }
+                ? { ...msg, content: msg.content + chunk, currentTool: undefined }
                 : msg
             ));
+          },
+          onToolCall: (toolCall: ToolCallInfo) => {
+            // Update message to show which tool is being called
+            setMessages(prev => prev.map(msg =>
+              msg.id === assistantId
+                ? { ...msg, currentTool: toolCall }
+                : msg
+            ));
+          },
+          onToolResult: () => {
+            // Clear the current tool when result is received
+            setMessages(prev => prev.map(msg =>
+              msg.id === assistantId
+                ? { ...msg, currentTool: undefined }
+                : msg
+            ));
+          },
+          onVehicleContext: (context) => {
+            setVehicleContext(context);
           },
           onDone: () => {
             setMessages(prev => prev.map(msg =>
               msg.id === assistantId
-                ? { ...msg, isStreaming: false }
+                ? { ...msg, isStreaming: false, currentTool: undefined }
                 : msg
             ));
             setIsStreaming(false);
@@ -89,7 +110,7 @@ function App() {
         // User cancelled
         setMessages(prev => prev.map(msg =>
           msg.id === assistantId
-            ? { ...msg, isStreaming: false, content: msg.content + ' [Cancelled]' }
+            ? { ...msg, isStreaming: false, currentTool: undefined, content: msg.content + ' [Cancelled]' }
             : msg
         ));
       } else {
@@ -106,12 +127,22 @@ function App() {
     setIsStreaming(false);
   }, []);
 
-  const handleClearChat = useCallback(() => {
+  const handleClearChat = useCallback(async () => {
+    // Clear server-side conversation if we have a conversation ID
+    if (conversationId) {
+      try {
+        await fetch(`/api/chat/${conversationId}`, { method: 'DELETE' });
+      } catch (err) {
+        console.error('Failed to clear server conversation:', err);
+        // Continue with local clear even if server clear fails
+      }
+    }
     setMessages([]);
     setConversationId(null);
+    setVehicleContext(null);
     setError(null);
     setShowClearConfirm(false);
-  }, []);
+  }, [conversationId]);
 
   return (
     <div className="app">
@@ -120,7 +151,10 @@ function App() {
           <ClarissaLogo size={28} />
           <h1>Clarissa</h1>
         </div>
-        <p>NHTSA Vehicle Safety Assistant</p>
+        <div className="header-subtitle">
+          <p>NHTSA Vehicle Safety Assistant</p>
+          {vehicleContext && <VehicleContextBadge vehicle={vehicleContext} />}
+        </div>
         <div className="header-actions">
           {messages.length > 0 && (
             <button onClick={() => setShowClearConfirm(true)} className="clear-button">
@@ -162,10 +196,30 @@ function App() {
               <li><Star size={18} /> <strong>Safety Ratings</strong> - Get NCAP crash test ratings</li>
               <li><FileText size={18} /> <strong>Complaints</strong> - View consumer complaints</li>
             </ul>
-            <p className="example">
-              <span className="example-label">Try asking:</span>
-              <span className="example-text">"Any recalls on the 2020 Tesla Model 3?"</span>
-            </p>
+            <p className="example-label">Try asking:</p>
+            <div className="example-queries">
+              <button
+                className="example-query"
+                onClick={() => handleSendMessage("Any recalls on the 2020 Tesla Model 3?")}
+                disabled={isStreaming}
+              >
+                🚨 "Any recalls on the 2020 Tesla Model 3?"
+              </button>
+              <button
+                className="example-query"
+                onClick={() => handleSendMessage("What's the safety rating for the 2024 Toyota Camry?")}
+                disabled={isStreaming}
+              >
+                ⭐ "What's the safety rating for the 2024 Toyota Camry?"
+              </button>
+              <button
+                className="example-query"
+                onClick={() => handleSendMessage("Show me complaints for the 2022 Honda Accord")}
+                disabled={isStreaming}
+              >
+                💬 "Show me complaints for the 2022 Honda Accord"
+              </button>
+            </div>
           </div>
         ) : (
           <div className="messages">

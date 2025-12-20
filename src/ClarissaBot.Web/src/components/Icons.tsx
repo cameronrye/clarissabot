@@ -14,6 +14,12 @@ import {
   Github,
   BookOpen,
   ExternalLink,
+  Copy,
+  Check,
+  Search,
+  Microscope,
+  MessageSquare,
+  Loader2,
 } from 'lucide-react';
 
 // Re-export all icons for easy importing
@@ -33,6 +39,12 @@ export {
   Github,
   BookOpen,
   ExternalLink,
+  Copy,
+  Check,
+  Search,
+  Microscope,
+  MessageSquare,
+  Loader2,
 };
 
 // Clarissa Logo - Uses the favicon SVG

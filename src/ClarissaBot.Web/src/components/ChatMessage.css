@@ -31,7 +31,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 20%;
   background-color: var(--color-bg-card);
   flex-shrink: 0;
 }
@@ -83,11 +83,49 @@
 .message-time {
   font-size: 0.65rem;
   color: var(--color-text-secondary);
+  flex: 1;
 }
 
 @media (min-width: 640px) {
   .message-time {
     font-size: 0.75rem;
+  }
+}
+
+/* Copy button */
+.copy-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.chat-message:hover .copy-button {
+  opacity: 1;
+}
+
+.copy-button:hover {
+  background-color: var(--color-bg-card);
+  color: var(--color-text-primary);
+}
+
+.copy-button.copied {
+  opacity: 1;
+  color: var(--color-cyan);
+}
+
+@media (max-width: 639px) {
+  .copy-button {
+    opacity: 1;
   }
 }
 
@@ -162,3 +200,61 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
+
+/* Thinking indicator */
+.thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.thinking .tool-icon {
+  color: var(--color-cyan);
+  flex-shrink: 0;
+}
+
+.thinking .tool-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.thinking-text {
+  margin-right: 0.25rem;
+}
+
+.thinking-dots {
+  display: inline-flex;
+}
+
+.thinking-dots span {
+  animation: thinking-dot 1.4s infinite both;
+}
+
+.thinking-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.thinking-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes thinking-dot {
+  0%, 80%, 100% {
+    opacity: 0.2;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+

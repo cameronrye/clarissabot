@@ -180,16 +180,15 @@
   }
 }
 
-/* Mobile-first: single column on mobile */
+/* 2-column grid for built with section */
 .tech-stack {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.875rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
 }
 
 @media (min-width: 480px) {
   .tech-stack {
-    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
   }
 }

@@ -13,11 +13,14 @@ using Microsoft.Extensions.Logging;
 public class NhtsaService : INhtsaService
 {
     private const string BaseUrl = "https://api.nhtsa.gov";
+    private const string VpicBaseUrl = "https://vpic.nhtsa.dot.gov/api";
 
     // Cache TTLs - recalls and safety data change infrequently
     private static readonly TimeSpan RecallCacheTtl = TimeSpan.FromHours(6);
     private static readonly TimeSpan ComplaintCacheTtl = TimeSpan.FromHours(1);
     private static readonly TimeSpan SafetyRatingCacheTtl = TimeSpan.FromHours(24);
+    private static readonly TimeSpan VinCacheTtl = TimeSpan.FromDays(30); // VINs don't change
+    private static readonly TimeSpan InvestigationCacheTtl = TimeSpan.FromHours(6);
 
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
@@ -43,6 +46,12 @@ public class NhtsaService : INhtsaService
 
     private static string GetSafetyRatingCacheKey(string make, string model, int year)
         => $"nhtsa:safety:{make.ToLowerInvariant()}:{model.ToLowerInvariant()}:{year}";
+
+    private static string GetVinCacheKey(string vin)
+        => $"nhtsa:vin:{vin.ToUpperInvariant()}";
+
+    private static string GetInvestigationCacheKey(string make, string model, int year)
+        => $"nhtsa:investigations:{make.ToLowerInvariant()}:{model.ToLowerInvariant()}:{year}";
 
     /// <inheritdoc />
     public async Task<RecallResponse> GetRecallsAsync(string make, string model, int year, CancellationToken cancellationToken = default)
@@ -153,6 +162,114 @@ public class NhtsaService : INhtsaService
             _logger.LogError(ex, "Error fetching safety rating for {Year} {Make} {Model}", year, make, model);
             return null;
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<VehicleInfo?> DecodeVinAsync(string vin, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(vin) || vin.Length != 17)
+        {
+            return new VehicleInfo
+            {
+                Vin = vin,
+                ErrorCode = "INVALID_VIN",
+                ErrorText = "VIN must be exactly 17 characters"
+            };
+        }
+
+        var cacheKey = GetVinCacheKey(vin);
+
+        if (_cache.TryGetValue(cacheKey, out VehicleInfo? cached) && cached is not null)
+        {
+            _logger.LogDebug("Cache hit for VIN: {Vin}", vin);
+            return cached;
+        }
+
+        var url = $"{VpicBaseUrl}/vehicles/DecodeVinValues/{Uri.EscapeDataString(vin)}?format=json";
+
+        _logger.LogInformation("Decoding VIN: {Vin}", vin);
+
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<VinDecodeResponse>(url, _jsonOptions, cancellationToken);
+
+            if (response?.Results is not { Count: > 0 })
+            {
+                return new VehicleInfo { Vin = vin, ErrorCode = "NOT_FOUND", ErrorText = "Could not decode VIN" };
+            }
+
+            var results = response.Results;
+            var result = new VehicleInfo
+            {
+                Vin = vin,
+                Year = ParseInt(GetValue(results, "Model Year")),
+                Make = GetValue(results, "Make"),
+                Model = GetValue(results, "Model"),
+                Trim = GetValue(results, "Trim"),
+                VehicleType = GetValue(results, "Vehicle Type"),
+                BodyClass = GetValue(results, "Body Class"),
+                DriveType = GetValue(results, "Drive Type"),
+                FuelType = GetValue(results, "Fuel Type - Primary"),
+                EngineSize = GetValue(results, "Displacement (L)"),
+                EngineCylinders = GetValue(results, "Engine Number of Cylinders"),
+                TransmissionStyle = GetValue(results, "Transmission Style"),
+                PlantCountry = GetValue(results, "Plant Country"),
+                ErrorCode = GetValue(results, "Error Code"),
+                ErrorText = GetValue(results, "Error Text")
+            };
+
+            _cache.Set(cacheKey, result, VinCacheTtl);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error decoding VIN: {Vin}", vin);
+            return new VehicleInfo { Vin = vin, ErrorCode = "API_ERROR", ErrorText = ex.Message };
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<InvestigationResponse> GetInvestigationsAsync(string make, string model, int year, CancellationToken cancellationToken = default)
+    {
+        var cacheKey = GetInvestigationCacheKey(make, model, year);
+
+        if (_cache.TryGetValue(cacheKey, out InvestigationResponse? cached) && cached is not null)
+        {
+            _logger.LogDebug("Cache hit for investigations: {Year} {Make} {Model}", year, make, model);
+            return cached;
+        }
+
+        var encodedMake = HttpUtility.UrlEncode(make);
+        var encodedModel = HttpUtility.UrlEncode(model);
+        var url = $"{BaseUrl}/products/vehicle/makes/{encodedMake}/models/{encodedModel}/modelYears/{year}/investigations?format=json";
+
+        _logger.LogInformation("Fetching investigations for {Year} {Make} {Model}", year, make, model);
+
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<InvestigationResponse>(url, _jsonOptions, cancellationToken);
+            var result = response ?? new InvestigationResponse { Count = 0, Results = [] };
+
+            _cache.Set(cacheKey, result, InvestigationCacheTtl);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching investigations for {Year} {Make} {Model}", year, make, model);
+            return new InvestigationResponse { Count = 0, Results = [] };
+        }
+    }
+
+    private static string? GetValue(List<VinInfo> results, string variable)
+    {
+        var value = results.FirstOrDefault(r => r.Variable == variable)?.Value;
+        return string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    private static int? ParseInt(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        return int.TryParse(value, out var result) ? result : null;
     }
 }
 
