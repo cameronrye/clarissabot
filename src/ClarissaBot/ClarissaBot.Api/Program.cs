@@ -200,7 +200,7 @@ static async Task WriteStreamingEvent(HttpResponse response, StreamingEvent stre
 {
     var json = streamEvent switch
     {
-        ContentChunkEvent chunk => System.Text.Json.JsonSerializer.Serialize(new { type = "chunk", chunk.Content }),
+        ContentChunkEvent chunk => System.Text.Json.JsonSerializer.Serialize(new { type = "chunk", content = chunk.Content }),
         ToolCallEvent toolCall => System.Text.Json.JsonSerializer.Serialize(new
         {
             type = "toolCall",
