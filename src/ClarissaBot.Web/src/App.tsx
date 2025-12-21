@@ -10,6 +10,9 @@ import { useTheme } from './hooks/useTheme';
 import { ClarissaLogo, Info, Bell, Star, FileText, AlertTriangle, GradientHeart } from './components/Icons';
 import './App.css';
 
+// Throttle interval for streaming updates (ms) - reduces re-renders during fast streaming
+const STREAM_THROTTLE_MS = 32; // ~30fps, smooth enough for text
+
 function App() {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -21,6 +24,11 @@ function App() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { theme, setTheme } = useTheme();
+
+  // Streaming buffer refs for throttled updates
+  const chunkBufferRef = useRef<string>('');
+  const flushTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastFlushRef = useRef<number>(0);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -58,6 +66,24 @@ function App() {
     
     abortControllerRef.current = new AbortController();
     
+    // Reset buffer for new stream
+    chunkBufferRef.current = '';
+    lastFlushRef.current = Date.now();
+
+    // Helper to flush buffered chunks to state
+    const flushBuffer = () => {
+      if (chunkBufferRef.current) {
+        const bufferedContent = chunkBufferRef.current;
+        chunkBufferRef.current = '';
+        setMessages(prev => prev.map(msg =>
+          msg.id === assistantId
+            ? { ...msg, content: msg.content + bufferedContent, currentTool: undefined }
+            : msg
+        ));
+      }
+      lastFlushRef.current = Date.now();
+    };
+
     try {
       await streamChatMessage(
         content,
@@ -65,11 +91,25 @@ function App() {
         {
           onConversationId: (id) => setConversationId(id),
           onChunk: (chunk) => {
-            setMessages(prev => prev.map(msg =>
-              msg.id === assistantId
-                ? { ...msg, content: msg.content + chunk, currentTool: undefined }
-                : msg
-            ));
+            // Buffer chunks and throttle updates to reduce re-renders
+            chunkBufferRef.current += chunk;
+            const now = Date.now();
+            const elapsed = now - lastFlushRef.current;
+
+            if (elapsed >= STREAM_THROTTLE_MS) {
+              // Enough time has passed, flush immediately
+              if (flushTimeoutRef.current) {
+                clearTimeout(flushTimeoutRef.current);
+                flushTimeoutRef.current = null;
+              }
+              flushBuffer();
+            } else if (!flushTimeoutRef.current) {
+              // Schedule a flush for the remaining time
+              flushTimeoutRef.current = setTimeout(() => {
+                flushTimeoutRef.current = null;
+                flushBuffer();
+              }, STREAM_THROTTLE_MS - elapsed);
+            }
           },
           onToolCall: (toolCall: ToolCallInfo) => {
             // Update message to show which tool is being called
@@ -91,9 +131,17 @@ function App() {
             setVehicleContext(context);
           },
           onDone: () => {
+            // Flush any remaining buffered content
+            if (flushTimeoutRef.current) {
+              clearTimeout(flushTimeoutRef.current);
+              flushTimeoutRef.current = null;
+            }
+            const remainingContent = chunkBufferRef.current;
+            chunkBufferRef.current = '';
+
             setMessages(prev => prev.map(msg =>
               msg.id === assistantId
-                ? { ...msg, isStreaming: false, currentTool: undefined }
+                ? { ...msg, content: msg.content + remainingContent, isStreaming: false, currentTool: undefined }
                 : msg
             ));
             setIsStreaming(false);
@@ -106,11 +154,19 @@ function App() {
         abortControllerRef.current.signal
       );
     } catch (err) {
+      // Clean up buffer and timeout on error
+      if (flushTimeoutRef.current) {
+        clearTimeout(flushTimeoutRef.current);
+        flushTimeoutRef.current = null;
+      }
+      const remainingContent = chunkBufferRef.current;
+      chunkBufferRef.current = '';
+
       if (err instanceof Error && err.name === 'AbortError') {
-        // User cancelled
+        // User cancelled - include any buffered content
         setMessages(prev => prev.map(msg =>
           msg.id === assistantId
-            ? { ...msg, isStreaming: false, currentTool: undefined, content: msg.content + ' [Cancelled]' }
+            ? { ...msg, isStreaming: false, currentTool: undefined, content: msg.content + remainingContent + ' [Cancelled]' }
             : msg
         ));
       } else {
@@ -192,9 +248,9 @@ function App() {
             <h2>Welcome</h2>
             <p>I can help you with vehicle safety information from NHTSA:</p>
             <ul>
-              <li><Bell size={18} /> <strong>Recalls</strong> - Check for safety recalls on any vehicle</li>
-              <li><Star size={18} /> <strong>Safety Ratings</strong> - Get NCAP crash test ratings</li>
-              <li><FileText size={18} /> <strong>Complaints</strong> - View consumer complaints</li>
+              <li><Bell size={18} /> <strong>Recalls</strong> <span>- Check for safety recalls on any vehicle</span></li>
+              <li><Star size={18} /> <strong>Safety Ratings</strong> <span>- Get NCAP crash test ratings</span></li>
+              <li><FileText size={18} /> <strong>Complaints</strong> <span>- View consumer complaints</span></li>
             </ul>
             <p className="example-label">Try asking:</p>
             <div className="example-queries">

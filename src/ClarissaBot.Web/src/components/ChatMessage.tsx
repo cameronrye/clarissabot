@@ -1,8 +1,15 @@
-import { useState, type ReactNode } from 'react';
+import { useState, memo, lazy, Suspense, type ReactNode } from 'react';
 import type { ChatMessage as ChatMessageType } from '../types/chat';
-import ReactMarkdown from 'react-markdown';
 import { ClarissaAvatar, UserAvatar, Copy, Check, Bell, Star, MessageSquare, Search, Microscope, Loader2 } from './Icons';
 import './ChatMessage.css';
+
+// Lazy-load react-markdown to reduce initial bundle size (~40KB gzipped)
+const ReactMarkdown = lazy(() => import('react-markdown'));
+
+// Simple loading placeholder while markdown loads
+function MarkdownLoading() {
+  return <span className="markdown-loading">Loading...</span>;
+}
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -24,7 +31,8 @@ function getToolIcon(toolName: string): ReactNode {
   }
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+// Memoize to prevent re-renders of completed messages when new streaming chunks arrive
+export const ChatMessage = memo(function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
 
@@ -93,11 +101,24 @@ export function ChatMessage({ message }: ChatMessageProps) {
           ) : message.isStreaming && !message.content ? (
             renderLoadingState()
           ) : (
-            <ReactMarkdown>{message.content}</ReactMarkdown>
+            <Suspense fallback={<MarkdownLoading />}>
+              <ReactMarkdown>{message.content}</ReactMarkdown>
+            </Suspense>
           )}
           {message.isStreaming && message.content && <span className="cursor">▊</span>}
         </div>
       </div>
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison for better memoization performance
+  // Only re-render if message content/state actually changed
+  const prev = prevProps.message;
+  const next = nextProps.message;
+  return (
+    prev.id === next.id &&
+    prev.content === next.content &&
+    prev.isStreaming === next.isStreaming &&
+    prev.currentTool?.toolName === next.currentTool?.toolName
+  );
+});

@@ -114,6 +114,8 @@ The agent uses Azure OpenAI function calling with the following tools:
 - `check_recalls` - Get recalls by vehicle year/make/model
 - `get_complaints` - Get consumer complaints
 - `get_safety_rating` - Get NCAP safety ratings
+- `decode_vin` - Decode VIN to get vehicle details
+- `check_investigations` - Check active NHTSA safety investigations
 
 ## Running Tests
 

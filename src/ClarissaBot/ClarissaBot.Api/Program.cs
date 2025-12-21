@@ -62,14 +62,59 @@ if (string.IsNullOrEmpty(endpoint))
         "set the 'AZURE_OPENAI_ENDPOINT' environment variable.");
 }
 
+// Configure DefaultAzureCredential with optimized settings for faster auth
+// Exclude credential providers that are slow or not used in this environment
+var credentialOptions = new DefaultAzureCredentialOptions
+{
+    // Keep these enabled (fast, commonly used)
+    ExcludeEnvironmentCredential = false,           // Fast: checks env vars
+    ExcludeManagedIdentityCredential = false,       // Fast in Azure, skipped locally
+    ExcludeAzureCliCredential = false,              // Used for local development
+
+    // Exclude these (slow or not typically used for server apps)
+    ExcludeInteractiveBrowserCredential = true,     // Not applicable for server
+    ExcludeVisualStudioCredential = true,           // Slow, not needed in production
+    ExcludeVisualStudioCodeCredential = true,       // Slow, not needed in production
+    ExcludeAzurePowerShellCredential = true,        // Slow, rarely used
+    ExcludeAzureDeveloperCliCredential = true,      // Slow, rarely used
+    ExcludeWorkloadIdentityCredential = false,      // Keep for Kubernetes scenarios
+};
+
 var openAIClient = new AzureOpenAIClient(
     new Uri(endpoint),
-    new DefaultAzureCredential());
+    new DefaultAzureCredential(credentialOptions));
 
 var chatClient = openAIClient.GetChatClient(deploymentName);
 builder.Services.AddClarissaAgent(chatClient);
 
 var app = builder.Build();
+
+// Pre-warm Azure OpenAI connection in background to eliminate first-request delay
+_ = Task.Run(async () =>
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var agent = scope.ServiceProvider.GetRequiredService<IClarissaAgent>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+        logger.LogInformation("Pre-warming Azure OpenAI connection...");
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        // Send a minimal request to establish connection and warm up the model
+        await agent.ChatAsync("ping", "warmup-session");
+        agent.ClearConversation("warmup-session");
+
+        sw.Stop();
+        logger.LogInformation("Azure OpenAI connection warmed up in {ElapsedMs}ms", sw.ElapsedMilliseconds);
+    }
+    catch (Exception ex)
+    {
+        // Log but don't fail startup - warmup is optional optimization
+        var logger = app.Services.GetService<ILogger<Program>>();
+        logger?.LogWarning(ex, "Failed to pre-warm Azure OpenAI connection");
+    }
+});
 
 // Add exception handling middleware for production
 if (!app.Environment.IsDevelopment())
@@ -108,6 +153,7 @@ app.MapPost("/api/chat/stream", async (
         httpContext.Response.Headers.Append("Content-Type", "text/event-stream");
         httpContext.Response.Headers.Append("Cache-Control", "no-cache");
         httpContext.Response.Headers.Append("Connection", "keep-alive");
+        httpContext.Response.Headers.Append("X-Accel-Buffering", "no"); // Prevent nginx/proxy buffering
 
         var conversationId = request.ConversationId ?? Guid.NewGuid().ToString();
 

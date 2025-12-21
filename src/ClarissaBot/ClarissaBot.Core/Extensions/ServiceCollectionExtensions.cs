@@ -24,10 +24,18 @@ public static class ServiceCollectionExtensions
         services.AddMemoryCache();
 
         // Register HttpClient for NHTSA API with resilience policies
+        // Using Singleton lifetime for NhtsaService - HttpClient from IHttpClientFactory is thread-safe
         services.AddHttpClient<INhtsaService, NhtsaService>(client =>
         {
             client.DefaultRequestHeaders.Add("Accept", "application/json");
             client.Timeout = TimeSpan.FromSeconds(30);
+        })
+        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+        {
+            // Connection pooling for better performance
+            PooledConnectionLifetime = TimeSpan.FromMinutes(10),
+            PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+            EnableMultipleHttp2Connections = true
         })
         .AddResilienceHandler("NhtsaResilience", builder =>
         {
@@ -59,8 +67,8 @@ public static class ServiceCollectionExtensions
             builder.AddTimeout(TimeSpan.FromSeconds(10));
         });
 
-        // Register NHTSA tools
-        services.AddScoped<NhtsaTools>();
+        // Register NHTSA tools as singleton (thread-safe, uses thread-safe HttpClient and IMemoryCache)
+        services.AddSingleton<NhtsaTools>();
 
         return services;
     }
@@ -74,7 +82,9 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddClarissaAgent(this IServiceCollection services, ChatClient chatClient)
     {
         services.AddSingleton(chatClient);
-        services.AddScoped<IClarissaAgent, ClarissaAgent>();
+        // Register as singleton - ClarissaAgent is thread-safe with ConcurrentDictionary for conversations
+        // and uses static cached tool definitions and system instructions
+        services.AddSingleton<IClarissaAgent, ClarissaAgent>();
         return services;
     }
 }

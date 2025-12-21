@@ -207,7 +207,6 @@ public class ClarissaAgent : IClarissaAgent, IDisposable
     private readonly ILogger<ClarissaAgent> _logger;
     private readonly ConcurrentDictionary<string, ConversationEntry> _conversations = new();
     private readonly ConcurrentDictionary<string, DateTime> _evictedConversations = new();
-    private readonly List<ChatTool> _tools;
     private readonly Timer _cleanupTimer;
     private readonly TimeSpan _maxIdleTime;
     private readonly int _maxConversations;
@@ -217,6 +216,10 @@ public class ClarissaAgent : IClarissaAgent, IDisposable
     private const int MaxRetries = 3;
     private const int MaxToolIterations = 10;
     private const int MaxEvictedTracking = 1000;
+
+    // Static cached values to avoid recreation on each request
+    private static readonly string CachedSystemInstructions = AgentInstructions.GetInstructions();
+    private static readonly IReadOnlyList<ChatTool> CachedToolDefinitions = CreateToolDefinitions();
 
     /// <summary>
     /// Tracks a conversation, its last access time, and vehicle context.
@@ -262,7 +265,6 @@ public class ClarissaAgent : IClarissaAgent, IDisposable
         _chatClient = chatClient;
         _nhtsaTools = nhtsaTools;
         _logger = logger;
-        _tools = CreateToolDefinitions();
 
         // Configure conversation cleanup from settings
         var maxIdleMinutes = configuration?.GetValue("Conversations:MaxIdleMinutes", 60) ?? 60;
@@ -645,7 +647,7 @@ public class ClarissaAgent : IClarissaAgent, IDisposable
         }
 
         var entry = _conversations.GetOrAdd(conversationId, _ =>
-            new ConversationEntry([new SystemChatMessage(AgentInstructions.GetInstructions())]));
+            new ConversationEntry([new SystemChatMessage(CachedSystemInstructions)]));
 
         entry.LastAccessedUtc = DateTime.UtcNow;
 
@@ -796,10 +798,10 @@ public class ClarissaAgent : IClarissaAgent, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private ChatCompletionOptions CreateChatOptions()
+    private static ChatCompletionOptions CreateChatOptions()
     {
         var options = new ChatCompletionOptions();
-        foreach (var tool in _tools)
+        foreach (var tool in CachedToolDefinitions)
         {
             options.Tools.Add(tool);
         }
