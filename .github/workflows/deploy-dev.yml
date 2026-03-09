@@ -78,7 +78,7 @@ jobs:
 
       - name: Docker meta (API)
         id: meta-api
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ steps.acr.outputs.login-server }}/clarissabot-api
           tags: |
@@ -97,7 +97,7 @@ jobs:
 
       - name: Docker meta (Web)
         id: meta-web
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ steps.acr.outputs.login-server }}/clarissabot-web
           tags: |
